@@ -65,7 +65,7 @@ if mode == "":
         st.rerun()
     st.stop()
 
-# === HP LAPANGAN ===
+# === HP LAPANGAN - TETEP AUTO KIRIM GPS ===
 if mode == "user":
     nama = nama_url or "HP-TANPA-NAMA"
     merk = merk_url or "HP"
@@ -106,12 +106,14 @@ if mode == "user":
     components.html(html, height=120)
     st.stop()
 
-# === KOMANDO ===
+# === KOMANDO - UDAH GAK AUTO REFRESH ===
 if mode == "komando":
     st.title("🦅 MATA ELANG - KOMANDO")
     st.write("Komando yang input data. HP tinggal klik link.")
-    components.html("<script>setTimeout(()=>{window.top.location.reload();}, 5000);</script>", height=0)
     
+    if st.button("🔄 REFRESH MANUAL - Cek Posisi Terbaru", use_container_width=True):
+        st.rerun()
+
     st.subheader("➕ Tambah Personil Baru")
     nama_baru = st.text_input("Nama Personil, contoh: Kancil 1")
     merk_baru = st.selectbox("Merk HP", ["OPPO","SAMSUNG","VIVO","XIAOMI","REALME","IPHONE","LAINNYA"])
@@ -127,11 +129,10 @@ if mode == "komando":
     dfp = load_personil()
     clean_old()
     df = load_data()
-    st.subheader(f"📋 Daftar Personil ({len(dfp)} orang) - Auto-refresh 5 detik")
+    st.subheader(f"📋 Daftar Personil ({len(dfp)} orang)")
     if dfp.empty:
         st.info("Belum ada personil. Tambah dulu di atas, contoh: Kancil 1")
     else:
-        # Ambil base URL otomatis
         try:
             host = st.context.headers.get("host", "mata-elang.streamlit.app")
             base = f"https://{host}"
