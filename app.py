@@ -96,7 +96,7 @@ elif mode == "drone":
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 270°</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180°</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -139,14 +139,14 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 270° / 22 DETIK - VIBES JOS!";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK - CEPET JOS!";
     });
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
     async function orbit360(p){
       stopOrbit = false;
       let startBearing = map.getBearing();
-      let totalDerajat = 270;
-      let durasi = 22000;
+      let totalDerajat = 180;
+      let durasi = 15000;
       let startTime = performance.now();
       document.getElementById('orbitFill').style.width = "0%";
       return new Promise((resolve)=>{
@@ -159,9 +159,9 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 270° - " + p.nama;
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 270°<br>ALT: 280m | SPD: 25 km/j | STABIL";
-          if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 270° - " + p.nama; resolve(); }
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama;
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 280m | SPD: 25 km/j | STABIL";
+          if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
       });
@@ -194,7 +194,7 @@ elif mode == "drone":
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 270°";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180°";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
