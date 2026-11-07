@@ -106,10 +106,8 @@ elif mode == "drone":
         if(data[k] && data[k].lat){
           let p = {nama:k, lat:data[k].lat, lon:data[k].lon, waktu:data[k].waktu};
           points.push(p);
-          // Marker BISA DI KLIK - popup muncul
           let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML("<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+"<br><a href='https://www.google.com/maps?q="+p.lat+","+p.lon+"' target='_blank'>Buka di Google Maps</a>")).addTo(map);
           marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
-          // Tombol di bawah peta
           let b = document.createElement('button');
           b.className = 'hpBtn';
           b.innerText = '📍 ' + p.nama + ' - TERBANG KE SINI';
@@ -128,7 +126,6 @@ elif mode == "drone":
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+"<br><a href='https://www.google.com/maps?q="+p.lat+","+p.lon+"' target='_blank'>Buka di Google Maps</a>";
       map.flyTo({center:[p.lon, p.lat], zoom: 17, pitch: 60, bearing: 0, duration: 3500, essential:true, curve: 1.1, speed: 0.7});
       await sleep(3800);
-      // HOVER SMOOTH - cuma geser dikit, gak muter jauh biar gak pecah
       document.getElementById('hud').innerHTML = "DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>STATUS: STABIL - MENGAMATI...";
       map.easeTo({bearing: 25, pitch: 65, duration: 8000, easing: t=>t*(2-t)});
       await sleep(8200);
@@ -147,7 +144,6 @@ elif mode == "drone":
         document.getElementById('hud').innerHTML = "DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>STATUS: STABIL...";
         map.easeTo({bearing: 25, pitch: 65, duration: 8000, easing: t=>t*(2-t)});
         await sleep(8200);
-        // Balikin bearing ke 0 pelan biar gak kaget pas pindah target
         map.easeTo({bearing: 0, duration: 1000});
         await sleep(1100);
       }
