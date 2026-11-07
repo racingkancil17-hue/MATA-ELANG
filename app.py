@@ -28,12 +28,15 @@ if mode == "user":
         let lat = pos.coords.latitude;
         let lon = pos.coords.longitude;
         document.getElementById('out').innerHTML = "GPS AKTIF<br>Lat: " + lat + "<br>Lon: " + lon + "<br>Mengirim ke Komando...";
-        let data = {};
-        data[NAMA] = {lat: lat, lon: lon, merk: MERK, waktu: new Date().toLocaleString()};
-        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {
-          method: "PUT",
-          headers: {"Content-Type": "application/json", "X-Master-Key": API_KEY},
-          body: JSON.stringify({record: data})
+        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
+        .then(r => r.json()).then(j => {
+          let data = j.record || {};
+          data[NAMA] = {lat: lat, lon: lon, merk: MERK, waktu: new Date().toLocaleString()};
+          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {
+            method: "PUT",
+            headers: {"Content-Type": "application/json", "X-Master-Key": API_KEY},
+            body: JSON.stringify({record: data})
+          });
         });
       }, err => {
         document.getElementById('out').innerHTML = "GPS DITOLAK! Klik gembok di address bar > Izinkan Lokasi > Refresh";
@@ -47,21 +50,41 @@ if mode == "user":
 
 else:
     st.title("MATA ELANG - KOMANDO")
+    st.write("Total HP terpantau di bawah, auto nambah kalau HP baru ngirim.")
     if st.button("REFRESH SEKARANG"):
         st.rerun()
+
+    # --- INI INPUT HP BARU NYA ---
+    st.divider()
+    st.subheader("Tambah HP Baru")
+    new_nama = st.text_input("Nama HP Baru, contoh: Budi", "")
+    new_merk = st.text_input("Merk HP, contoh: Vivo", "")
+    if new_nama:
+        link_baru = "https://mata-elang.streamlit.app/?mode=user&nama=" + new_nama.replace(" ", "%20") + "&merk=" + new_merk.replace(" ", "%20")
+        st.success("Kirim link ini ke HP " + new_nama + ":")
+        st.code(link_baru)
+        st.write("Tinggal klik link itu di HP baru, izinkan lokasi, langsung muncul di bawah.")
+    st.divider()
+
     try:
         r = requests.get(URL + "/latest", headers=HEADERS, timeout=10)
-        j = r.json()
-        data = j.get("record", {})
+        data = r.json().get("record", {})
         if data is None:
             data = {}
     except Exception as e:
         data = {}
         st.error("Gagal ambil data: " + str(e))
     if not data:
-        st.warning("Belum ada data. Pastikan HP Kancil masih nyala dan GPS aktif.")
+        st.warning("Belum ada data. Pastikan HP masih nyala dan GPS aktif.")
+    # Peta gabungan semua HP
+    if data:
+        all_lat = []
+        all_lon = []
+        for n, v in data.items():
+            all_lat.append(v["lat"])
+            all_lon.append(v["lon"])
+        st.map(data={"lat": all_lat, "lon": all_lon})
     for n, v in data.items():
         st.success(str(n) + " | " + str(v.get("merk", "")) + " | " + str(v.get("waktu", "")))
         st.write("Lat: " + str(v["lat"]) + " | Lon: " + str(v["lon"]))
         st.markdown("[Buka di Google Maps](https://www.google.com/maps?q=" + str(v["lat"]) + "," + str(v["lon"]) + ")")
-        st.map(data={"lat": [v["lat"]], "lon": [v["lon"]]})
