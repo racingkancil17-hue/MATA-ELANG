@@ -12,6 +12,18 @@ mode = params.get("mode", "komando")
 nama = params.get("nama", "Kancil")
 merk = params.get("merk", "OPPO")
 
+def bersihkan_data(data):
+    # Kalau data ke-bungkus record dobel, buka bungkusnya
+    while isinstance(data, dict) and "record" in data and isinstance(data["record"], dict):
+        data = data["record"]
+    # Buang yang bukan HP (yang gak ada lat/lon)
+    bersih = {}
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, dict) and "lat" in v and "lon" in v:
+                bersih[k] = v
+    return bersih
+
 if mode == "user":
     st.title("MATA ELANG - " + nama)
     st.success("Halo " + nama + " | HP: " + merk)
@@ -31,11 +43,15 @@ if mode == "user":
         fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
         .then(r => r.json()).then(j => {
           let data = j.record || {};
-          data[NAMA] = {lat: lat, lon: lon, merk: MERK, waktu: new Date().toLocaleString()};
+          while(data.record && typeof data.record === 'object'){ data = data.record; }
+          // Buang yang rusak
+          let bersih = {};
+          for(let k in data){ if(data[k] && data[k].lat){ bersih[k] = data[k]; } }
+          bersih[NAMA] = {lat: lat, lon: lon, merk: MERK, waktu: new Date().toLocaleString()};
           fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {
             method: "PUT",
             headers: {"Content-Type": "application/json", "X-Master-Key": API_KEY},
-            body: JSON.stringify({record: data})
+            body: JSON.stringify(bersih)
           });
         });
       }, err => {
@@ -50,11 +66,8 @@ if mode == "user":
 
 else:
     st.title("MATA ELANG - KOMANDO")
-    st.write("Total HP terpantau di bawah, auto nambah kalau HP baru ngirim.")
     if st.button("REFRESH SEKARANG"):
         st.rerun()
-
-    # --- INI INPUT HP BARU NYA ---
     st.divider()
     st.subheader("Tambah HP Baru")
     new_nama = st.text_input("Nama HP Baru, contoh: Budi", "")
@@ -63,20 +76,16 @@ else:
         link_baru = "https://mata-elang.streamlit.app/?mode=user&nama=" + new_nama.replace(" ", "%20") + "&merk=" + new_merk.replace(" ", "%20")
         st.success("Kirim link ini ke HP " + new_nama + ":")
         st.code(link_baru)
-        st.write("Tinggal klik link itu di HP baru, izinkan lokasi, langsung muncul di bawah.")
     st.divider()
-
     try:
         r = requests.get(URL + "/latest", headers=HEADERS, timeout=10)
-        data = r.json().get("record", {})
-        if data is None:
-            data = {}
+        raw = r.json().get("record", {})
+        data = bersihkan_data(raw)
     except Exception as e:
         data = {}
         st.error("Gagal ambil data: " + str(e))
     if not data:
-        st.warning("Belum ada data. Pastikan HP masih nyala dan GPS aktif.")
-    # Peta gabungan semua HP
+        st.warning("Belum ada data. Buka link HP dulu, biarin 10 detik, baru Refresh di sini.")
     if data:
         all_lat = []
         all_lon = []
