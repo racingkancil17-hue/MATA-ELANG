@@ -30,7 +30,6 @@ if mode == "user":
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
-    // Bikin ID otomatis kayak Zoom, disimpan di HP biar gak ganti-ganti
     let myId = localStorage.getItem("mata_elang_id");
     if(!myId){
       myId = "HP-" + Math.floor(1000 + Math.random()*9000);
@@ -67,9 +66,9 @@ if mode == "user":
 
 else:
     st.title("MATA ELANG - KOMANDO SATELIT")
-    st.write("Auto refresh tiap 10 detik. Berapapun HP yang join, semua muncul di sini.")
-    # Auto refresh biar kayak Zoom, gak usah klik Refresh lagi
-    st.markdown('<meta http-equiv="refresh" content="10">', unsafe_allow_html=True)
+    st.write("Klik tombol di bawah kalau ada HP baru yang join.")
+    if st.button("REFRESH - CEK HP BARU", use_container_width=True):
+        st.rerun()
     try:
         r = requests.get(URL + "/latest", headers=HEADERS, timeout=10)
         data = bersihkan_data(r.json().get("record", {}))
@@ -80,10 +79,8 @@ else:
     if not data:
         st.warning("Belum ada yang join. Share link user ke grup WA.")
     else:
-        # PETA SATELIT - Esri World Imagery, bisa zoom sampe rumah
         import folium
         from streamlit_folium import st_folium
-        # Tengah peta di Indonesia
         m = folium.Map(location=[-2.5, 118.0], zoom_start=5, tiles="Esri.WorldImagery")
         for n, v in data.items():
             folium.Marker(
