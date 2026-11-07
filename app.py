@@ -29,7 +29,6 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
-# ========== 1. HP KANCAMU ==========
 if mode == "user":
     st.title("🦅 MATA ELANG - LIVE")
     nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: Budi")
@@ -68,7 +67,6 @@ if mode == "user":
     """
     st.components.v1.html(html_code, height=120)
 
-# ========== 2. DRONE CINEMATIC 3D - IKI SING KOE TAKOKKE! ==========
 elif mode == "drone":
     st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D")
     st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
@@ -78,7 +76,7 @@ elif mode == "drone":
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <style>
       #map{width:100%; height:600px; border-radius:12px;}
-      .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.55); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
+      .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
       .wrap{position:relative;}
       .target{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1; font-size:36px; pointer-events:none; opacity:0.7;}
@@ -86,6 +84,8 @@ elif mode == "drone":
       .hpBtn{background:#1a1a1a; color:#00ff00; border:1px solid #00ff00; padding:10px 16px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:14px;}
       .hpBtn:hover{background:#00ff00; color:black;}
       .infoBox{background:#f0f0f0; padding:12px; border-radius:10px; margin-top:10px; font-family:monospace; font-size:14px; min-height:50px;}
+      .orbitBar{width:100%; height:8px; background:#ddd; border-radius:4px; margin-top:8px; overflow:hidden;}
+      .orbitFill{height:100%; width:0%; background:#00ff00; transition:width 0.3s;}
     </style>
     <div class="wrap">
       <div class="hud" id="hud">DRONE: STANDBY<br>Menunggu data...</div>
@@ -95,6 +95,8 @@ elif mode == "drone":
     </div>
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
+    <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 360°</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -110,11 +112,12 @@ elif mode == "drone":
         terrain: { source: 'terrain', exaggeration: 1.2 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
-      fadeDuration: 300, maxTileCacheSize: 200
+      fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
     });
     map.addControl(new maplibregl.NavigationControl());
     let points = [];
     let sedangTerbang = false;
+    let stopOrbit = false;
     fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
     .then(r=>r.json()).then(j=>{
       let data = j.record || {};
@@ -127,7 +130,7 @@ elif mode == "drone":
         if(data[k] && data[k].lat){
           let p = {nama:k, lat:data[k].lat, lon:data[k].lon, waktu:data[k].waktu};
           points.push(p);
-          let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML("<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+"<br><a href='https://www.google.com/maps?q="+p.lat+","+p.lon+"' target='_blank'>Buka di Google Maps</a>")).addTo(map);
+          let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML("<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu)).addTo(map);
           marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
           let b = document.createElement('button');
           b.className = 'hpBtn';
@@ -136,20 +139,45 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>Klik nama di bawah untuk cek lokasi";
-      document.getElementById('infoBox').innerHTML = "Total: "+points.length+" Online. Klik salah satu tombol ijo.";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 360° / 30 DETIK";
     });
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+    async function orbit360(p){
+      stopOrbit = false;
+      let startBearing = map.getBearing();
+      let totalDerajat = 360;
+      let durasi = 30000;
+      let startTime = performance.now();
+      document.getElementById('orbitFill').style.width = "0%";
+      return new Promise((resolve)=>{
+        function frame(now){
+          if(stopOrbit){ resolve(); return; }
+          let elapsed = now - startTime;
+          let progress = Math.min(elapsed / durasi, 1);
+          let eased = progress < 0.1 ? progress * progress * 10 : progress < 0.9 ? 0.1 + (progress - 0.1) * 1.05 : 1 - Math.pow(1 - progress, 2);
+          let derajat = totalDerajat * eased;
+          let bearingBaru = startBearing + derajat;
+          map.setBearing(bearingBaru);
+          document.getElementById('orbitFill').style.width = (progress * 100) + "%";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 360° - " + p.nama;
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 360°<br>ALT: 280m | SPD: 25 km/j | STABIL";
+          if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 360° - " + p.nama; resolve(); }
+        }
+        requestAnimationFrame(frame);
+      });
+    }
     async function terbangKe(p){
       if(sedangTerbang) return;
       sedangTerbang = true;
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 350m | SPD: 60 km/j";
-      document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+"<br><a href='https://www.google.com/maps?q="+p.lat+","+p.lon+"' target='_blank'>Buka di Google Maps</a>";
-      map.flyTo({center:[p.lon, p.lat], zoom: 17, pitch: 60, bearing: 0, duration: 3500, essential:true, curve: 1.1, speed: 0.7});
-      await sleep(3800);
-      document.getElementById('hud').innerHTML = "DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>STATUS: STABIL - MENGAMATI...";
-      map.easeTo({bearing: 25, pitch: 65, duration: 8000, easing: t=>t*(2-t)});
-      await sleep(8200);
+      stopOrbit = true;
+      await sleep(200);
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 280m | SPD: 45 km/j";
+      document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
+      map.flyTo({center:[p.lon, p.lat], zoom: 16.5, pitch: 55, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
+      await sleep(4300);
+      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
+      await sleep(1200);
+      await orbit360(p);
       sedangTerbang = false;
     }
     async function startPatroli(){
@@ -158,25 +186,22 @@ elif mode == "drone":
       sedangTerbang = true;
       for(let i=0; i<points.length; i++){
         let p = points[i];
-        document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama+"<br>ALT: 350m | SPD: 60 km/j";
+        document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
-        map.flyTo({center:[p.lon, p.lat], zoom: 17, pitch: 60, bearing: 0, duration: 3500, essential:true, curve: 1.1, speed: 0.7});
-        await sleep(3800);
-        document.getElementById('hud').innerHTML = "DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>STATUS: STABIL...";
-        map.easeTo({bearing: 25, pitch: 65, duration: 8000, easing: t=>t*(2-t)});
-        await sleep(8200);
-        map.easeTo({bearing: 0, duration: 1000});
-        await sleep(1100);
+        map.flyTo({center:[p.lon, p.lat], zoom: 16.5, pitch: 55, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
+        await sleep(4300);
+        await sleep(1200);
+        await orbit360(p);
+        await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 360°";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
     </script>
     """
-    st.components.v1.html(drone_html, height=780)
+    st.components.v1.html(drone_html, height=820)
 
-# ========== 3. KOMANDO - LAPTOPMU NGATUR KABEH ==========
 else:
     st.title("🦅 MATA ELANG - KOMANDO")
     users, kicked = ambil()
