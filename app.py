@@ -55,21 +55,18 @@ if mode == "user":
 elif mode == "drone":
     st.title("MATA ELANG - DRONE CINEMATIC 3D")
     st.write("Buat laporan ke Panglima. Klik MULAI PATROLI, kamera terbang sendiri ke tiap HP.")
-    st.warning("Tips Laporan: Klik MULAI PATROLI > langsung Screen Record (Win + G) > kirim videonya ke Panglima.")
     drone_html = """
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <style>
       #map{width:100%; height:650px; border-radius:12px;}
-      .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.7); color:#00ff00; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px;}
-      .hud2{position:absolute; top:12px; right:12px; z-index:10; background:red; color:white; padding:6px 12px; border-radius:20px; font-weight:bold; font-family:sans-serif;}
+      .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.55); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
       .wrap{position:relative;}
       .target{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5; font-size:42px; pointer-events:none; opacity:0.8;}
     </style>
     <div class="wrap">
       <div class="hud" id="hud">DRONE: STANDBY<br>TARGET: -<br>ALT: 800m | SPD: 0 km/j</div>
-      <div class="hud2">● REC 00:00</div>
       <div class="target">⊕</div>
       <div id="map"></div>
       <button class="btn" onclick="startPatroli()">▶️ MULAI PATROLI DRONE</button>
@@ -92,8 +89,6 @@ elif mode == "drone":
     });
     map.addControl(new maplibregl.NavigationControl());
     let points = [];
-    let recSec = 0;
-    setInterval(()=>{ recSec++; let m=String(Math.floor(recSec/60)).padStart(2,'0'); let s=String(recSec%60).padStart(2,'0'); document.querySelector('.hud2').innerText = '● REC '+m+':'+s; }, 1000);
     fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
     .then(r=>r.json()).then(j=>{
       let data = j.record || {};
@@ -117,6 +112,9 @@ elif mode == "drone":
         document.getElementById('hud').innerHTML = "DRONE: DI ATAS TARGET<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
         map.flyTo({center:[p.lon, p.lat], zoom: 18, pitch: 75, bearing: 180, duration: 3000, essential:true});
         await sleep(3500);
+        document.getElementById('hud').innerHTML = "DRONE: HOVER - MEMANTAU TARGET<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+"<br>STATUS: STABIL - MENGAMATI...";
+        map.easeTo({bearing: 360, duration: 7000, essential:true});
+        await sleep(7500);
       }
       document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau<br>Kembali ke Markas...";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 4000});
