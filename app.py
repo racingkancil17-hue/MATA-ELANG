@@ -21,32 +21,40 @@ def bersihkan_data(data):
     return bersih
 
 if mode == "user":
-    st.title("MATA ELANG - LIVE")
-    st.success("Kamu udah JOIN! Biarin halaman ini NYALA. Jangan di-close.")
-    html_code = """
+    st.title("🦅 MATA ELANG - LIVE")
+    # === TAMBAHAN BARU: ISI NAMA DULU ===
+    nama = st.text_input("👤 ISI JENENGMU DISIK BRO:", placeholder="Contoh: Budi, Andi, Sari...")
+    if not nama:
+        st.warning("⚠️ Isi jenengmu disik neng nduwur, baru GPS iso jalan!")
+        st.stop()
+
+    # Bersihkan nama biar aman dadi ID (tanpa spasi aneh2)
+    nama_bersih = "".join(c for c in nama.strip() if c.isalnum() or c in " -_").strip()
+    st.success(f"Halo {nama_bersih}! Kamu udah JOIN! Biarin halaman ini NYALA. Jangan di-close.")
+    html_code = f"""
     <div id="out" style="font-size:18px; padding:15px; background:#e8f5e9; border-radius:10px;">Mencari GPS... Izinkan lokasi kalau diminta.</div>
     <div id="myid" style="font-size:16px; padding:10px; margin-top:10px; background:#fff3cd; border-radius:10px;"></div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
-    let myId = localStorage.getItem("mata_elang_id");
-    if(!myId){ myId = "HP-" + Math.floor(1000 + Math.random()*9000); localStorage.setItem("mata_elang_id", myId); }
-    document.getElementById('myid').innerHTML = "ID Kamu: <b>" + myId + "</b><br>Udah masuk peta Komando!";
-    function kirim(){
-      navigator.geolocation.getCurrentPosition(pos => {
+    // === ID SAHKI NGGO JENENG, ORA HP-XXXX MANEH ===
+    let myId = "{nama_bersih}";
+    document.getElementById('myid').innerHTML = "Jeneng Kamu: <b>" + myId + "</b><br>Udah masuk peta Komando!";
+    function kirim(){{
+      navigator.geolocation.getCurrentPosition(pos => {{
         let lat = pos.coords.latitude; let lon = pos.coords.longitude;
-        document.getElementById('out').innerHTML = "GPS AKTIF<br>Lat: " + lat + "<br>Lon: " + lon + "<br>Mengirim ke Komando...";
-        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
-        .then(r => r.json()).then(j => {
-          let data = j.record || {};
-          while(data.record && typeof data.record === 'object'){ data = data.record; }
-          let bersih = {};
-          for(let k in data){ if(data[k] && data[k].lat){ bersih[k] = data[k]; } }
-          bersih[myId] = {lat: lat, lon: lon, merk: navigator.userAgent.slice(0,60), waktu: new Date().toLocaleString()};
-          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {method: "PUT", headers: {"Content-Type": "application/json", "X-Master-Key": API_KEY}, body: JSON.stringify(bersih)});
-        });
-      }, err => { document.getElementById('out').innerHTML = "GPS DITOLAK! Klik gembok > Izinkan Lokasi > Refresh"; });
-    }
+        document.getElementById('out').innerHTML = "GPS AKTIF - " + myId + "<br>Lat: " + lat + "<br>Lon: " + lon + "<br>Mengirim ke Komando...";
+        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {{headers: {{"X-Master-Key": API_KEY}}}})
+        .then(r => r.json()).then(j => {{
+          let data = j.record || {{}};
+          while(data.record && typeof data.record === 'object'){{ data = data.record; }}
+          let bersih = {{}};
+          for(let k in data){{ if(data[k] && data[k].lat){{ bersih[k] = data[k]; }} }}
+          bersih[myId] = {{lat: lat, lon: lon, merk: navigator.userAgent.slice(0,60), waktu: new Date().toLocaleString()}};
+          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {{method: "PUT", headers: {{"Content-Type": "application/json", "X-Master-Key": API_KEY}}, body: JSON.stringify(bersih)}});
+        }});
+      }}, err => {{ document.getElementById('out').innerHTML = "GPS DITOLAK! Klik gembok > Izinkan Lokasi > Refresh"; }});
+    }}
     kirim(); setInterval(kirim, 5000);
     </script>
     """
