@@ -143,7 +143,12 @@ elif mode == "drone":
         if(data[k] && data[k].lat){
           let p = {nama:k, lat:data[k].lat, lon:data[k].lon, waktu:data[k].waktu};
           points.push(p);
-          let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML("<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu)).addTo(map);
+          let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML(
+  "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+
+  "<br><br>"+
+  "<a href='https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lon+"' target='_blank' style='display:block;background:#1a73e8;color:#fff;text-align:center;padding:12px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:15px;margin-bottom:8px;'>🧭 RUTE KE SINI - GOOGLE MAPS</a>"+
+  "<a href='https://www.google.com/maps/search/?api=1&query="+p.lat+","+p.lon+"' target='_blank' style='display:block;background:#fff;color:#1a73e8;border:1px solid #1a73e8;text-align:center;padding:10px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:14px;'>📍 BUKA DI GOOGLE MAPS</a>"
+)).addTo(map);
           marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
           let b = document.createElement('button');
           b.className = 'hpBtn';
