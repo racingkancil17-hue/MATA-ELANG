@@ -31,7 +31,7 @@ def simpan(users, kicked):
 
 if mode == "user":
     st.title("🦅 MATA ELANG - LIVE")
-    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: Budi")
+    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: NamaMu")
     if not nama:
         st.warning("Isi jenengmu disik!")
         st.stop()
@@ -103,7 +103,7 @@ elif mode == "drone":
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 19</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 16</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -119,7 +119,7 @@ elif mode == "drone":
         terrain: { source: 'terrain', exaggeration: 1.2 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
-      maxZoom: 19.5, minZoom: 2,
+      maxZoom: 16.5, minZoom: 2,
       fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
     });
     map.addControl(new maplibregl.NavigationControl());
@@ -128,8 +128,8 @@ elif mode == "drone":
     let stopOrbit = false;
     let targetAktif = null;
     function zoomMax(){
-      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 65, duration: 1200}); }
-      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 65, duration: 1200}); }
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 16, pitch: 65, duration: 1200}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 16, pitch: 65, duration: 1200}); }
     }
     fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
     .then(r=>r.json()).then(j=>{
@@ -152,7 +152,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 19 MAKSIMAL";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 16 MAKSIMAL";
     });
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
     async function orbit360(p){
@@ -172,8 +172,8 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 19 MAKSIMAL";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 19 | STABIL";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 16 MAKSIMAL";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 16 | STABIL";
           if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
@@ -185,9 +185,9 @@ elif mode == "drone":
       stopOrbit = true;
       targetAktif = p;
       await sleep(200);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 MAKSIMAL";
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 16 MAKSIMAL";
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
-      // ZOOM MAKSIMAL 19, PITCH 65 - NEMPEL POL!
+      // ZOOM MAKSIMAL 16, PITCH 65 - NEMPEL POL!
       map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
       await sleep(4300);
       document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
@@ -204,13 +204,13 @@ elif mode == "drone":
         targetAktif = p;
         document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
-        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
+        map.flyTo({center:[p.lon, p.lat], zoom: 16, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
         await sleep(4300);
         await sleep(1200);
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 19";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 16";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
@@ -238,19 +238,19 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 19")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 16")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
         import folium
         from streamlit_folium import st_folium
-        # Nek ono user, peta langsung fokus neng user pertama, zoom 19 MAKSIMAL!
+        # Nek ono user, peta langsung fokus neng user pertama, zoom 16 MAKSIMAL!
         # Nek ora ono user, peta Indonesia zoom 5
         first = list(users.values())[0]
         tengah = [first["lat"], first["lon"]] if users else [-2.5, 118.0]
-        zoom_awal = 19 if users else 5
+        zoom_awal = 16 if users else 5
         if st.session_state.get("zoom_max"):
-            zoom_awal = 19
+            zoom_awal = 16
         m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
         for n, v in users.items():
             folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
@@ -274,5 +274,5 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 19](https://mata-elang.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16](https://mata-elang.streamlit.app/?mode=drone)")
     st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
