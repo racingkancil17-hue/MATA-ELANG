@@ -29,9 +29,7 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
-# FUNGSI BARU - URL EARTH BENER, ZOOM DRONE LANGSUNG!
 def earth_url(lat, lon):
-    # 500a = ketinggian 500m, 35y = jarak, 45t = miring 45 derajat koyo drone
     return f"https://earth.google.com/web/@{lat},{lon},500a,35y,0h,45t,0r"
 
 if mode == "user":
@@ -74,7 +72,7 @@ if mode == "user":
 
 elif mode == "drone":
     st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D")
-    st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta! Nek pin susah diklik, klik tombol ijo ae!")
+    st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
     st.markdown("[⬅️ Balik ke KOMANDO](https://mata-elang.streamlit.app/?mode=komando)")
     drone_html = """
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -90,7 +88,7 @@ elif mode == "drone":
       #listBtn{margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;}
       .hpBtn{background:#1a1a1a; color:#00ff00; border:1px solid #00ff00; padding:10px 16px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:14px;}
       .hpBtn:hover{background:#00ff00; color:black;}
-      .infoBox{background:#f0f0f0; padding:12px; border-radius:10px; margin-top:10px; font-family:monospace; font-size:14px; min-height:50px;}
+      .infoBox{background:#f0f0f0; padding:12px; border-radius:10px; margin-top:10px; font-family:monospace; font-size:14px; min-height:60px;}
       .orbitBar{width:100%; height:8px; background:#ddd; border-radius:4px; margin-top:8px; overflow:hidden;}
       .orbitFill{height:100%; width:0%; background:#00ff00; transition:width 0.3s;}
       .earthBtn{display:inline-block; margin:6px 6px 0 0; padding:10px 16px; border-radius:20px; font-weight:bold; font-size:14px; text-decoration:none; color:white;}
@@ -113,7 +111,7 @@ elif mode == "drone":
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor gawe ndelok lokasi valid-e. Klik 🌍 gawe buka nang Google Earth asli!</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 19 | KLIK PIN / TOMBOL IJO ISO!</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 18 HALUS | KLIK PIN / TOMBOL IJO ISO!</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -126,10 +124,10 @@ elif mode == "drone":
           terrain: { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256 }
         },
         layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
-        terrain: { source: 'terrain', exaggeration: 1.2 }
+        terrain: { source: 'terrain', exaggeration: 0.8 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
-      maxZoom: 19.5, minZoom: 2,
+      maxZoom: 18.5, minZoom: 2,
       fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
     });
     map.addControl(new maplibregl.NavigationControl());
@@ -138,10 +136,9 @@ elif mode == "drone":
     let stopOrbit = false;
     let targetAktif = null;
     function zoomMax(){
-      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 65, duration: 1200}); }
-      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 65, duration: 1200}); }
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 18, pitch: 60, duration: 2000}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 18, pitch: 60, duration: 2000}); }
     }
-    // FIX UTAMA - FORMAT EARTH BENER!
     function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
     function linkStreet(p){ return "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + p.lat + "," + p.lon; }
@@ -168,7 +165,7 @@ elif mode == "drone":
           el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
           el.innerHTML = '<div style="transform:rotate(45deg); color:white; font-weight:bold; font-size:16px;">📍</div>';
           let popupHtml = "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
-            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19</button>" +
+            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 18</button>" +
             "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>";
           let marker = new maplibregl.Marker({element: el, draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true, offset: 25}).setHTML(popupHtml)).addTo(map);
           el.addEventListener('click', (e)=>{ e.stopPropagation(); terbangKe(p); });
@@ -180,7 +177,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 19 MAKSIMAL | PIN ISO DIKLIK!";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 18 HALUS | PIN ISO DIKLIK!";
       window.terbangDariPopup = function(nama){
         let p = points.find(x => x.nama === nama);
         if(p) terbangKe(p);
@@ -191,7 +188,7 @@ elif mode == "drone":
       stopOrbit = false;
       let startBearing = map.getBearing();
       let totalDerajat = 180;
-      let durasi = 15000;
+      let durasi = 25000;
       let startTime = performance.now();
       document.getElementById('orbitFill').style.width = "0%";
       return new Promise((resolve)=>{
@@ -204,8 +201,8 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 19 MAKSIMAL";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 19 | STABIL";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 18 HALUS";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 18 | STABIL";
           if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
@@ -216,13 +213,13 @@ elif mode == "drone":
       sedangTerbang = true;
       stopOrbit = true;
       targetAktif = p;
-      await sleep(200);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 MAKSIMAL";
+      await sleep(300);
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 18 HALUS";
       updateInfoBox(p);
-      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
-      await sleep(4300);
+      map.flyTo({center:[p.lon, p.lat], zoom: 18, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+      await sleep(6500);
       document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
-      await sleep(1200);
+      await sleep(1500);
       await orbit360(p);
       sedangTerbang = false;
     }
@@ -235,19 +232,19 @@ elif mode == "drone":
         targetAktif = p;
         document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         updateInfoBox(p);
-        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
-        await sleep(4300);
-        await sleep(1200);
+        map.flyTo({center:[p.lon, p.lat], zoom: 18, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+        await sleep(6500);
+        await sleep(1500);
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 19";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 18";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
     </script>
     """
-    st.components.v1.html(drone_html, height=820)
+    st.components.v1.html(drone_html, height=980)
 
 else:
     st.title("🦅 MATA ELANG - KOMANDO")
@@ -269,7 +266,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 19")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 18 HALUS")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -277,12 +274,11 @@ else:
         from streamlit_folium import st_folium
         first = list(users.values())[0]
         tengah = [first["lat"], first["lon"]] if users else [-2.5, 118.0]
-        zoom_awal = 19 if users else 5
+        zoom_awal = 18 if users else 5
         if st.session_state.get("zoom_max"):
-            zoom_awal = 19
-        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
+            zoom_awal = 18
+        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=19, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
         for n, v in users.items():
-            # FIX FOLIUM - PAKE FUNGSI earth_url()
             popup_html = f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='{earth_url(v['lat'], v['lon'])}'>🌍 BUKA DI GOOGLE EARTH</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>"
             folium.Marker([v["lat"], v["lon"]], popup=popup_html, tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
             folium.Circle([v["lat"], v["lon"]], radius=20, color="red", fill=True, fill_opacity=0.3).add_to(m)
@@ -294,7 +290,6 @@ else:
         with col1:
             st.write(f"🟢 **{n}** | {v.get('waktu','')} | {v['lat']:.6f}, {v['lon']:.6f}")
         with col2:
-            # FIX TOMBOL EARTH - PAKE FUNGSI earth_url()
             st.link_button("🌍 EARTH", earth_url(v['lat'], v['lon']), use_container_width=True)
         with col3:
             if st.button(f"🔍 ZOOM", key=f"zoom_{n}", use_container_width=True):
@@ -307,5 +302,5 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 19](https://mata-elang.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 18](https://mata-elang.streamlit.app/?mode=drone)")
     st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
