@@ -30,7 +30,12 @@ def simpan(users, kicked):
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
 def earth_url(lat, lon):
+    # DRONE - Kamera miring 3D, titik nang tengah layar
     return f"https://earth.google.com/web/@{lat},{lon},500a,35y,0h,45t,0r"
+
+def earth_pin_url(lat, lon):
+    # PIN - Ono PIN ABANG, titik ketok jelas!
+    return f"https://earth.google.com/web/search/{lat},{lon}"
 
 if mode == "user":
     st.title("🦅 MATA ELANG - LIVE")
@@ -71,8 +76,8 @@ if mode == "user":
     st.components.v1.html(html_code, height=120)
 
 elif mode == "drone":
-    st.title("🦅 MATA ELANG - DRONE 3D + 4K - Koyo Google Earth")
-    st.write("Klik tombol ijo jeneng -> Pencet 📸 FOTO 4K gawe tajem, 🚁 DRONE gawe 3D miring!")
+    st.title("🦅 MATA ELANG - DRONE 3D + 4K + PIN")
+    st.write("Klik tombol ijo jeneng -> Pencet 📍 EARTH PIN gawe ndelok pin abang nang Earth!")
     st.markdown("[⬅️ Balik ke KOMANDO](https://mata-elang.streamlit.app/?mode=komando)")
     drone_html = """
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -101,7 +106,7 @@ elif mode == "drone":
       .popupBtn{display:block; width:100%; margin-top:8px; padding:10px; border:none; border-radius:10px; background:#ff0000; color:white; font-weight:bold; font-size:14px; cursor:pointer;}
     </style>
     <div class="wrap">
-      <div class="hud" id="hud">DRONE: STANDBY - 3D + 4K<br>Menunggu data...</div>
+      <div class="hud" id="hud">DRONE: STANDBY - 3D + 4K + PIN<br>Menunggu data...</div>
       <div class="zoomBtn">
         <button onclick="map.zoomIn()">+</button>
         <button onclick="map.zoomOut()">-</button>
@@ -114,9 +119,9 @@ elif mode == "drone":
       <button class="btnDrone" onclick="modeDrone()">🚁 MODE DRONE 3D</button>
     </div>
     <div id="listBtn"></div>
-    <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor gawe ndelok lokasi valid-e. Klik 🌍 gawe buka nang Google Earth asli - 100% plek koyo foto mu!</div>
+    <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor. Pencet 📍 EARTH PIN gawe ndelok pin abang nang Google Earth!</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 - 4K + 3D | KLIK PIN / TOMBOL IJO ISO!</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 - 4K + 3D + PIN | KLIK PIN / TOMBOL IJO ISO!</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -152,7 +157,7 @@ elif mode == "drone":
       if(!targetAktif){ alert("Klik tombol ijo jeneng disik!"); return; }
       stopOrbit = true;
       map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 0, bearing: 0, duration: 2000});
-      document.getElementById('hud').innerHTML = "MODE: FOTO 4K - TOP DOWN<br>TAJEM POL - Koyo Foto Mu!";
+      document.getElementById('hud').innerHTML = "MODE: FOTO 4K - TOP DOWN<br>TAJEM POL!";
     }
     function modeDrone(){
       if(!targetAktif) return;
@@ -161,12 +166,14 @@ elif mode == "drone":
       document.getElementById('hud').innerHTML = "MODE: DRONE 3D CINEMATIC<br>Miring 65° - Gedung Metu!";
     }
     function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
+    function linkEarthPin(p){ return "https://earth.google.com/web/search/" + p.lat + "," + p.lon; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
     function linkStreet(p){ return "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + p.lat + "," + p.lon; }
     function updateInfoBox(p){
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
-      "<br><a class='earthBtn' style='background:#4285F4' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH - 100% PLEK FOTO MU!</a>" +
-      "<a class='earthBtn' style='background:#34A853' target='_blank' href='"+linkMaps(p)+"'>🗺️ BUKA DI GOOGLE MAPS</a>" +
+      "<br><a class='earthBtn' style='background:#FF0000' target='_blank' href='"+linkEarthPin(p)+"'>📍 EARTH PIN - ONO PIN ABANG E!</a>" +
+      "<br><a class='earthBtn' style='background:#4285F4' target='_blank' href='"+linkEarth(p)+"'>🌍 EARTH DRONE - 3D MIRING</a>" +
+      "<a class='earthBtn' style='background:#34A853' target='_blank' href='"+linkMaps(p)+"'>🗺️ GOOGLE MAPS</a>" +
       "<a class='earthBtn' style='background:#FBBC05; color:black' target='_blank' href='"+linkStreet(p)+"'>👀 STREET VIEW</a>";
     }
     fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
@@ -187,7 +194,8 @@ elif mode == "drone":
           el.innerHTML = '<div style="transform:rotate(45deg); color:white; font-weight:bold; font-size:16px;">📍</div>';
           let popupHtml = "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
             "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19 - 4K 3D</button>" +
-            "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>";
+            "<a class='earthBtn' style='background:#FF0000; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarthPin(p)+"'>📍 EARTH PIN - ONO PIN E!</a>" +
+            "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 EARTH DRONE</a>";
           let marker = new maplibregl.Marker({element: el, draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true, offset: 25}).setHTML(popupHtml)).addTo(map);
           el.addEventListener('click', (e)=>{ e.stopPropagation(); terbangKe(p); });
           marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
@@ -198,7 +206,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP - 3D + 4K<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 19 - 4K 3D | PIN ISO DIKLIK!";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP - 3D + 4K + PIN<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 19 - 4K 3D | PIN ISO DIKLIK!";
       window.terbangDariPopup = function(nama){
         let p = points.find(x => x.nama === nama);
         if(p) terbangKe(p);
@@ -287,7 +295,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 - 4K 3D")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 - 4K 3D + PIN")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -300,28 +308,30 @@ else:
             zoom_awal = 19
         m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", attr="Google Satellite", zoom_control=True)
         for n, v in users.items():
-            popup_html = f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='{earth_url(v['lat'], v['lon'])}'>🌍 BUKA DI GOOGLE EARTH</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>"
+            popup_html = f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='{earth_pin_url(v['lat'], v['lon'])}'>📍 EARTH PIN - ONO PIN E!</a><br><a target='_blank' href='{earth_url(v['lat'], v['lon'])}'>🌍 EARTH DRONE</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>"
             folium.Marker([v["lat"], v["lon"]], popup=popup_html, tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
             folium.Circle([v["lat"], v["lon"]], radius=20, color="red", fill=True, fill_opacity=0.3).add_to(m)
             folium.CircleMarker([v["lat"], v["lon"]], radius=8, color="yellow", fill=True, fill_color="yellow").add_to(m)
         st_folium(m, width=1000, height=600, key="peta_max")
     st.markdown("### 📋 DAFTAR - KELUARKAN TEKO LAPTOP")
     for n, v in users.items():
-        col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+        col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
         with col1:
             st.write(f"🟢 **{n}** | {v.get('waktu','')} | {v['lat']:.6f}, {v['lon']:.6f}")
         with col2:
-            st.link_button("🌍 EARTH", earth_url(v['lat'], v['lon']), use_container_width=True)
+            st.link_button("📍 EARTH PIN", earth_pin_url(v['lat'], v['lon']), use_container_width=True)
         with col3:
+            st.link_button("🌍 EARTH", earth_url(v['lat'], v['lon']), use_container_width=True)
+        with col4:
             if st.button(f"🔍 ZOOM", key=f"zoom_{n}", use_container_width=True):
                 st.session_state["zoom_max"] = True
                 st.rerun()
-        with col4:
+        with col5:
             if st.button(f"❌ KELUARKAN", key=f"kick_{n}", use_container_width=True):
                 users_baru = {k:val for k,val in users.items() if k != n}
                 kicked_baru = kicked + [n] if n not in kicked else kicked
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 BUKA MODE DRONE 3D - ZOOM 19 - 4K](https://mata-elang.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 BUKA MODE DRONE 3D - ZOOM 19 - 4K + PIN](https://mata-elang.streamlit.app/?mode=drone)")
     st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
