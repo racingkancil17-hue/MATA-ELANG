@@ -71,8 +71,8 @@ if mode == "user":
     st.components.v1.html(html_code, height=120)
 
 elif mode == "drone":
-    st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D - 4K")
-    st.write("Diemin 10 detik biar peta 4K ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
+    st.title("🦅 MATA ELANG - DRONE 3D + 4K - Koyo Google Earth")
+    st.write("Klik tombol ijo jeneng -> Pencet 📸 FOTO 4K gawe tajem, 🚁 DRONE gawe 3D miring!")
     st.markdown("[⬅️ Balik ke KOMANDO](https://mata-elang.streamlit.app/?mode=komando)")
     drone_html = """
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -82,6 +82,8 @@ elif mode == "drone":
       #map canvas{ image-rendering: -webkit-optimize-contrast; filter: contrast(1.08) saturate(1.15); }
       .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
+      .btn4k{position:absolute; bottom:18px; right:18px; z-index:10; background:#00ff00; color:black; border:none; padding:12px 18px; font-weight:bold; border-radius:20px; cursor:pointer;}
+      .btnDrone{position:absolute; bottom:18px; left:18px; z-index:10; background:#4285F4; color:white; border:none; padding:12px 18px; font-weight:bold; border-radius:20px; cursor:pointer;}
       .zoomBtn{position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:6px;}
       .zoomBtn button{background:#fff; border:none; width:42px; height:42px; font-size:22px; font-weight:bold; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4);}
       .wrap{position:relative;}
@@ -99,7 +101,7 @@ elif mode == "drone":
       .popupBtn{display:block; width:100%; margin-top:8px; padding:10px; border:none; border-radius:10px; background:#ff0000; color:white; font-weight:bold; font-size:14px; cursor:pointer;}
     </style>
     <div class="wrap">
-      <div class="hud" id="hud">DRONE: STANDBY - 4K<br>Menunggu data...</div>
+      <div class="hud" id="hud">DRONE: STANDBY - 3D + 4K<br>Menunggu data...</div>
       <div class="zoomBtn">
         <button onclick="map.zoomIn()">+</button>
         <button onclick="map.zoomOut()">-</button>
@@ -108,11 +110,13 @@ elif mode == "drone":
       <div class="target">⊕</div>
       <div id="map"></div>
       <button class="btn" onclick="startPatroli()">▶️ MULAI PATROLI DRONE</button>
+      <button class="btn4k" onclick="foto4K()">📸 FOTO 4K - TOP DOWN</button>
+      <button class="btnDrone" onclick="modeDrone()">🚁 MODE DRONE 3D</button>
     </div>
     <div id="listBtn"></div>
-    <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor gawe ndelok lokasi valid-e. Klik 🌍 gawe buka nang Google Earth asli!</div>
+    <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor gawe ndelok lokasi valid-e. Klik 🌍 gawe buka nang Google Earth asli - 100% plek koyo foto mu!</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 - 4K HD | KLIK PIN / TOMBOL IJO ISO!</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 - 4K + 3D | KLIK PIN / TOMBOL IJO ISO!</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -122,9 +126,13 @@ elif mode == "drone":
         version: 8,
         sources: {
           sat: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 512 },
+          gedung: { type: 'vector', url: 'https://tiles.osmbuildings.org/data/tiles.json' },
           terrain: { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256 }
         },
-        layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
+        layers: [
+          { id: 'sat', type: 'raster', source: 'sat' },
+          { id: 'gedung-3d', type: 'fill-extrusion', source: 'gedung', 'source-layer': 'building', paint: { 'fill-extrusion-color': '#e0e0e0', 'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 16, ['get', 'render_height']], 'fill-extrusion-base': ['get', 'render_min_height'], 'fill-extrusion-opacity': 0.9, 'fill-extrusion-vertical-gradient': true } }
+        ],
         terrain: { source: 'terrain', exaggeration: 0.8 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
@@ -137,15 +145,27 @@ elif mode == "drone":
     let stopOrbit = false;
     let targetAktif = null;
     function zoomMax(){
-      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 60, duration: 2000}); }
-      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 60, duration: 2000}); }
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 65, duration: 2000}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 65, duration: 2000}); }
+    }
+    function foto4K(){
+      if(!targetAktif){ alert("Klik tombol ijo jeneng disik!"); return; }
+      stopOrbit = true;
+      map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 0, bearing: 0, duration: 2000});
+      document.getElementById('hud').innerHTML = "MODE: FOTO 4K - TOP DOWN<br>TAJEM POL - Koyo Foto Mu!";
+    }
+    function modeDrone(){
+      if(!targetAktif) return;
+      stopOrbit = true;
+      map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 65, bearing: 0, duration: 2000});
+      document.getElementById('hud').innerHTML = "MODE: DRONE 3D CINEMATIC<br>Miring 65° - Gedung Metu!";
     }
     function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
     function linkStreet(p){ return "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + p.lat + "," + p.lon; }
     function updateInfoBox(p){
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
-      "<br><a class='earthBtn' style='background:#4285F4' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>" +
+      "<br><a class='earthBtn' style='background:#4285F4' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH - 100% PLEK FOTO MU!</a>" +
       "<a class='earthBtn' style='background:#34A853' target='_blank' href='"+linkMaps(p)+"'>🗺️ BUKA DI GOOGLE MAPS</a>" +
       "<a class='earthBtn' style='background:#FBBC05; color:black' target='_blank' href='"+linkStreet(p)+"'>👀 STREET VIEW</a>";
     }
@@ -166,7 +186,7 @@ elif mode == "drone":
           el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
           el.innerHTML = '<div style="transform:rotate(45deg); color:white; font-weight:bold; font-size:16px;">📍</div>';
           let popupHtml = "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
-            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19 - 4K</button>" +
+            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19 - 4K 3D</button>" +
             "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>";
           let marker = new maplibregl.Marker({element: el, draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true, offset: 25}).setHTML(popupHtml)).addTo(map);
           el.addEventListener('click', (e)=>{ e.stopPropagation(); terbangKe(p); });
@@ -178,7 +198,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP - 4K<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 19 - 4K HD | PIN ISO DIKLIK!";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP - 3D + 4K<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 19 - 4K 3D | PIN ISO DIKLIK!";
       window.terbangDariPopup = function(nama){
         let p = points.find(x => x.nama === nama);
         if(p) terbangKe(p);
@@ -202,8 +222,8 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 19 - 4K HD";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 19 - 4K | STABIL";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 19 - 4K 3D";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 19 - 4K 3D | STABIL";
           if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
@@ -215,11 +235,11 @@ elif mode == "drone":
       stopOrbit = true;
       targetAktif = p;
       await sleep(300);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 - 4K";
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 - 4K 3D";
       updateInfoBox(p);
-      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
       await sleep(6500);
-      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta 4K...";
+      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta 4K 3D...";
       await sleep(1500);
       await orbit360(p);
       sedangTerbang = false;
@@ -233,13 +253,13 @@ elif mode == "drone":
         targetAktif = p;
         document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         updateInfoBox(p);
-        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
         await sleep(6500);
         await sleep(1500);
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 19 - 4K";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 19 - 4K 3D";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
@@ -267,7 +287,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 - 4K HD")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 - 4K 3D")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -303,5 +323,5 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 19 - 4K](https://mata-elang.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 BUKA MODE DRONE 3D - ZOOM 19 - 4K](https://mata-elang.streamlit.app/?mode=drone)")
     st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
