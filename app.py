@@ -29,6 +29,11 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
+# FUNGSI BARU - URL EARTH BENER, ZOOM DRONE LANGSUNG!
+def earth_url(lat, lon):
+    # 500a = ketinggian 500m, 35y = jarak, 45t = miring 45 derajat koyo drone
+    return f"https://earth.google.com/web/@{lat},{lon},500a,35y,0h,45t,0r"
+
 if mode == "user":
     st.title("🦅 MATA ELANG - LIVE")
     nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: Budi")
@@ -136,7 +141,8 @@ elif mode == "drone":
       if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 65, duration: 1200}); }
       else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 65, duration: 1200}); }
     }
-    function linkEarth(p){ return "https://earth.google.com/web/search/" + p.lat + "," + p.lon; }
+    // FIX UTAMA - FORMAT EARTH BENER!
+    function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
     function linkStreet(p){ return "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + p.lat + "," + p.lon; }
     function updateInfoBox(p){
@@ -157,7 +163,6 @@ elif mode == "drone":
         if(data[k] && data[k].lat){
           let p = {nama:k, lat:data[k].lat, lon:data[k].lon, waktu:data[k].waktu};
           points.push(p);
-          // PIN GEDE, GAMPANG DIKLIK!
           let el = document.createElement('div');
           el.style.width = '36px'; el.style.height = '48px'; el.style.background = 'red'; el.style.borderRadius = '50% 50% 50% 0'; el.style.transform = 'rotate(-45deg)'; el.style.border = '3px solid white'; el.style.boxShadow = '0 4px 10px rgba(0,0,0,0.5)'; el.style.cursor = 'pointer';
           el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
@@ -166,7 +171,6 @@ elif mode == "drone":
             "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19</button>" +
             "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>";
           let marker = new maplibregl.Marker({element: el, draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true, offset: 25}).setHTML(popupHtml)).addTo(map);
-          // FIX KLIK PIN - 2 CARA!
           el.addEventListener('click', (e)=>{ e.stopPropagation(); terbangKe(p); });
           marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
           let b = document.createElement('button');
@@ -177,7 +181,6 @@ elif mode == "drone":
         }
       }
       document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 19 MAKSIMAL | PIN ISO DIKLIK!";
-      // FUNGSI GLOBAL GAWE POPUP
       window.terbangDariPopup = function(nama){
         let p = points.find(x => x.nama === nama);
         if(p) terbangKe(p);
@@ -279,7 +282,9 @@ else:
             zoom_awal = 19
         m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
         for n, v in users.items():
-            folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='https://earth.google.com/web/search/{v['lat']},{v['lon']}'>🌍 BUKA DI GOOGLE EARTH</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
+            # FIX FOLIUM - PAKE FUNGSI earth_url()
+            popup_html = f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='{earth_url(v['lat'], v['lon'])}'>🌍 BUKA DI GOOGLE EARTH</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>"
+            folium.Marker([v["lat"], v["lon"]], popup=popup_html, tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
             folium.Circle([v["lat"], v["lon"]], radius=20, color="red", fill=True, fill_opacity=0.3).add_to(m)
             folium.CircleMarker([v["lat"], v["lon"]], radius=8, color="yellow", fill=True, fill_color="yellow").add_to(m)
         st_folium(m, width=1000, height=600, key="peta_max")
@@ -289,7 +294,8 @@ else:
         with col1:
             st.write(f"🟢 **{n}** | {v.get('waktu','')} | {v['lat']:.6f}, {v['lon']:.6f}")
         with col2:
-            st.link_button("🌍 EARTH", f"https://earth.google.com/web/search/{v['lat']},{v['lon']}", use_container_width=True)
+            # FIX TOMBOL EARTH - PAKE FUNGSI earth_url()
+            st.link_button("🌍 EARTH", earth_url(v['lat'], v['lon']), use_container_width=True)
         with col3:
             if st.button(f"🔍 ZOOM", key=f"zoom_{n}", use_container_width=True):
                 st.session_state["zoom_max"] = True
