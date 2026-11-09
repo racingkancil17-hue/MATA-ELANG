@@ -71,14 +71,15 @@ if mode == "user":
     st.components.v1.html(html_code, height=120)
 
 elif mode == "drone":
-    st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D")
-    st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
+    st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D - 4K")
+    st.write("Diemin 10 detik biar peta 4K ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
     st.markdown("[⬅️ Balik ke KOMANDO](https://mata-elang.streamlit.app/?mode=komando)")
     drone_html = """
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <style>
       #map{width:100%; height:650px; border-radius:12px;}
+      #map canvas{ image-rendering: -webkit-optimize-contrast; filter: contrast(1.08) saturate(1.15); }
       .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
       .zoomBtn{position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:6px;}
@@ -98,7 +99,7 @@ elif mode == "drone":
       .popupBtn{display:block; width:100%; margin-top:8px; padding:10px; border:none; border-radius:10px; background:#ff0000; color:white; font-weight:bold; font-size:14px; cursor:pointer;}
     </style>
     <div class="wrap">
-      <div class="hud" id="hud">DRONE: STANDBY<br>Menunggu data...</div>
+      <div class="hud" id="hud">DRONE: STANDBY - 4K<br>Menunggu data...</div>
       <div class="zoomBtn">
         <button onclick="map.zoomIn()">+</button>
         <button onclick="map.zoomOut()">-</button>
@@ -111,7 +112,7 @@ elif mode == "drone":
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang ngisor gawe ndelok lokasi valid-e. Klik 🌍 gawe buka nang Google Earth asli!</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 18 HALUS | KLIK PIN / TOMBOL IJO ISO!</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 - 4K HD | KLIK PIN / TOMBOL IJO ISO!</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -120,14 +121,14 @@ elif mode == "drone":
       style: {
         version: 8,
         sources: {
-          sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
+          sat: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'], tileSize: 512 },
           terrain: { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256 }
         },
         layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
         terrain: { source: 'terrain', exaggeration: 0.8 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
-      maxZoom: 18.5, minZoom: 2,
+      maxZoom: 20.5, minZoom: 2, antialias: true, pixelRatio: 2,
       fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
     });
     map.addControl(new maplibregl.NavigationControl());
@@ -136,8 +137,8 @@ elif mode == "drone":
     let stopOrbit = false;
     let targetAktif = null;
     function zoomMax(){
-      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 18, pitch: 60, duration: 2000}); }
-      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 18, pitch: 60, duration: 2000}); }
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 60, duration: 2000}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 60, duration: 2000}); }
     }
     function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
@@ -165,7 +166,7 @@ elif mode == "drone":
           el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
           el.innerHTML = '<div style="transform:rotate(45deg); color:white; font-weight:bold; font-size:16px;">📍</div>';
           let popupHtml = "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu +
-            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 18</button>" +
+            "<button class='popupBtn' onclick=\\"window.terbangDariPopup('"+p.nama+"')\\">🚁 TERBANG KE SINI - ZOOM 19 - 4K</button>" +
             "<a class='earthBtn' style='background:#4285F4; display:block; text-align:center; margin-top:8px' target='_blank' href='"+linkEarth(p)+"'>🌍 BUKA DI GOOGLE EARTH</a>";
           let marker = new maplibregl.Marker({element: el, draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true, offset: 25}).setHTML(popupHtml)).addTo(map);
           el.addEventListener('click', (e)=>{ e.stopPropagation(); terbangKe(p); });
@@ -177,7 +178,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 18 HALUS | PIN ISO DIKLIK!";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP - 4K<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 25 DETIK | ZOOM: 19 - 4K HD | PIN ISO DIKLIK!";
       window.terbangDariPopup = function(nama){
         let p = points.find(x => x.nama === nama);
         if(p) terbangKe(p);
@@ -201,8 +202,8 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 18 HALUS";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 18 | STABIL";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 19 - 4K HD";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 19 - 4K | STABIL";
           if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
@@ -214,11 +215,11 @@ elif mode == "drone":
       stopOrbit = true;
       targetAktif = p;
       await sleep(300);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 18 HALUS";
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 - 4K";
       updateInfoBox(p);
-      map.flyTo({center:[p.lon, p.lat], zoom: 18, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
       await sleep(6500);
-      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
+      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta 4K...";
       await sleep(1500);
       await orbit360(p);
       sedangTerbang = false;
@@ -232,13 +233,13 @@ elif mode == "drone":
         targetAktif = p;
         document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         updateInfoBox(p);
-        map.flyTo({center:[p.lon, p.lat], zoom: 18, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
+        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 60, bearing: 0, duration: 6000, essential:true, curve: 1.2, speed: 0.4});
         await sleep(6500);
         await sleep(1500);
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 18";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 19 - 4K";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
@@ -266,7 +267,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 18 HALUS")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 - 4K HD")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -274,10 +275,10 @@ else:
         from streamlit_folium import st_folium
         first = list(users.values())[0]
         tengah = [first["lat"], first["lon"]] if users else [-2.5, 118.0]
-        zoom_awal = 18 if users else 5
+        zoom_awal = 19 if users else 5
         if st.session_state.get("zoom_max"):
-            zoom_awal = 18
-        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=19, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
+            zoom_awal = 19
+        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", attr="Google Satellite", zoom_control=True)
         for n, v in users.items():
             popup_html = f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}<br><a target='_blank' href='{earth_url(v['lat'], v['lon'])}'>🌍 BUKA DI GOOGLE EARTH</a><br><a target='_blank' href='https://www.google.com/maps/search/?api=1&query={v['lat']},{v['lon']}'>🗺️ GOOGLE MAPS</a>"
             folium.Marker([v["lat"], v["lon"]], popup=popup_html, tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
@@ -302,5 +303,5 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 18](https://mata-elang.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 BUKA MODE DRONE CINEMATIC 3D - ZOOM 19 - 4K](https://mata-elang.streamlit.app/?mode=drone)")
     st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
