@@ -30,12 +30,11 @@ def simpan(users, kicked):
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
 def earth_url(lat, lon):
-    # DRONE - Kamera miring 3D, titik nang tengah layar
     return f"https://earth.google.com/web/@{lat},{lon},500a,35y,0h,45t,0r"
 
 def earth_pin_url(lat, lon):
-    # PIN - Ono PIN ABANG, titik ketok jelas!
-    return f"https://earth.google.com/web/search/{lat},{lon}"
+    # FIX PIN - SEARCH + KAMERA MUDUN 500m - PIN PASTI KETOK!
+    return f"https://earth.google.com/web/search/{lat},{lon}/@{lat},{lon},500a,35y,0h,0t,0r"
 
 if mode == "user":
     st.title("🦅 MATA ELANG - LIVE")
@@ -166,7 +165,7 @@ elif mode == "drone":
       document.getElementById('hud').innerHTML = "MODE: DRONE 3D CINEMATIC<br>Miring 65° - Gedung Metu!";
     }
     function linkEarth(p){ return "https://earth.google.com/web/@" + p.lat + "," + p.lon + ",500a,35y,0h,45t,0r"; }
-    function linkEarthPin(p){ return "https://earth.google.com/web/search/" + p.lat + "," + p.lon; }
+    function linkEarthPin(p){ return "https://earth.google.com/web/search/" + p.lat + "," + p.lon + "/@" + p.lat + "," + p.lon + ",500a,35y,0h,0t,0r"; }
     function linkMaps(p){ return "https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon; }
     function linkStreet(p){ return "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + p.lat + "," + p.lon; }
     function updateInfoBox(p){
