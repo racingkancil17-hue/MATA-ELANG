@@ -102,9 +102,9 @@ if mode == "user":
     """
     st.components.v1.html(user_html, height=780)
 
-# ===== DRONE - RETINA 4K + ORBIT SMOOTH =====
+# ===== DRONE - DJI STYLE - PITCH 55 + ORBIT easeTo 30 DETIK =====
 elif mode == "drone":
-    st.title("📻 RADIO KANCIL FM - DRONE CINEMATIC 3D")
+    st.title("📻 RADIO KANCIL FM - DRONE DJI CINEMATIC")
     st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
     st.markdown("[⬅️ Balik ke STUDIO FM](https://radio-kancil-fm.streamlit.app/?mode=komando)")
     drone_html = """
@@ -112,7 +112,7 @@ elif mode == "drone":
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <style>
       #map{width:100%; height:650px; border-radius:12px;}
-      #map canvas{ filter: contrast(1.08) saturate(1.15) brightness(1.02); }
+      #map canvas{ filter: contrast(1.05) saturate(1.12) brightness(1.02); }
       .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
       .zoomBtn{position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:6px;}
@@ -124,10 +124,10 @@ elif mode == "drone":
       .hpBtn:hover{background:#00ff00; color:black;}
       .infoBox{background:#f0f0f0; padding:12px; border-radius:10px; margin-top:10px; font-family:monospace; font-size:14px; min-height:50px;}
       .orbitBar{width:100%; height:8px; background:#ddd; border-radius:4px; margin-top:8px; overflow:hidden;}
-      .orbitFill{height:100%; width:0%; background:#00ff00;}
+      .orbitFill{height:100%; width:0%; background:#00ff00; transition:width 0.2s linear;}
     </style>
     <div class="wrap">
-      <div class="hud" id="hud">DRONE: STANDBY<br>Menunggu data...</div>
+      <div class="hud" id="hud">DRONE DJI: STANDBY<br>Menunggu data...</div>
       <div class="zoomBtn">
         <button onclick="map.zoomIn()">+</button>
         <button onclick="map.zoomOut()">-</button>
@@ -135,15 +135,17 @@ elif mode == "drone":
       </div>
       <div class="target">⊕</div>
       <div id="map"></div>
-      <button class="btn" onclick="startPatroli()">▶️ MULAI PATROLI DRONE</button>
+      <button class="btn" onclick="startPatroli()">▶️ MULAI PATROLI DJI</button>
     </div>
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: 19 | PETA: RETINA 4K</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT DJI: 0% - 0° / 180° | PITCH 55° DJI | ZOOM 18.5 | RETINA 4K</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
+    const PITCH_DJI = 55;
+    const ZOOM_DJI = 18.5;
     const map = new maplibregl.Map({
       container: 'map',
       style: {
@@ -157,17 +159,18 @@ elif mode == "drone":
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
       maxZoom: 22, minZoom: 2,
-      fadeDuration: 0, maxTileCacheSize: 1500, renderWorldCopies: false,
-      pixelRatio: 3, antialias: true, maxPitch: 85
+      fadeDuration: 0, maxTileCacheSize: 2000, renderWorldCopies: false,
+      pixelRatio: 2, antialias: true, maxPitch: 85
     });
     map.addControl(new maplibregl.NavigationControl());
     let points = [];
     let sedangTerbang = false;
     let stopOrbit = false;
     let targetAktif = null;
+    let orbitTimer = null;
     function zoomMax(){
-      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 19, pitch: 68, duration: 1500, easing: t => t}); }
-      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 19, pitch: 68, duration: 1500}); }
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: ZOOM_DJI, pitch: PITCH_DJI, duration: 1500, easing: t => t}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: ZOOM_DJI, pitch: PITCH_DJI, duration: 1500}); }
     }
     fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
     .then(r=>r.json()).then(j=>{
@@ -195,51 +198,57 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 20 DETIK SMOOTH | ZOOM: 19 | PETA RETINA 4K";
+      document.getElementById('hud').innerHTML = "DRONE DJI: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 30 DETIK GIMBAL | PITCH 55° DJI | ZOOM 18.5 | RETINA 4K";
     });
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-    async function orbitSmooth(p){
-      stopOrbit = false;
-      let totalDerajat = 180;
-      let durasi = 20000;
-      let kecepatan = totalDerajat / durasi;
-      let startBearing = map.getBearing();
-      let lastTime = performance.now();
-      let derajatJalan = 0;
-      document.getElementById('orbitFill').style.width = "0%";
+    // ORBIT DJI - PAKE easeTo BAWAAN MAPLIBRE, 1 GERAKAN UTUH, GAK PUTUS-PUTUS
+    function orbitDJI(p){
       return new Promise((resolve)=>{
-        function frame(now){
-          if(stopOrbit){ resolve(); return; }
-          let delta = now - lastTime;
-          lastTime = now;
-          derajatJalan += kecepatan * delta;
-          if(derajatJalan >= totalDerajat) derajatJalan = totalDerajat;
-          let progress = derajatJalan / totalDerajat;
-          map.setBearing(startBearing + derajatJalan);
-          let pitchHalus = 68 + Math.sin(progress * Math.PI) * 2;
-          map.setPitch(pitchHalus);
+        stopOrbit = false;
+        let startBearing = map.getBearing();
+        let targetBearing = startBearing + 180;
+        let durasi = 30000;
+        let startTime = Date.now();
+        // Update HUD tok, OJO setBearing manual, ben gak re-load tile!
+        if(orbitTimer) clearInterval(orbitTimer);
+        orbitTimer = setInterval(()=>{
+          let elapsed = Date.now() - startTime;
+          let progress = Math.min(elapsed / durasi, 1);
+          let derajat = Math.floor(progress * 180);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT SMOOTH: " + Math.floor(progress*100) + "% - " + Math.floor(derajatJalan) + "° / 180° - " + p.nama + " | ZOOM: 19 | RETINA 4K";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT SMOOTH<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajatJalan) + "° / 180°<br>ALT: 120m | ZOOM 19 | 60FPS | RETINA";
-          if(derajatJalan < totalDerajat){ requestAnimationFrame(frame); }
-          else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° SMOOTH - " + p.nama; resolve(); }
-        }
-        requestAnimationFrame(frame);
+          document.getElementById('orbitText').innerHTML = "ORBIT DJI: " + Math.floor(progress*100) + "% - " + derajat + "° / 180° - " + p.nama + " | PITCH 55° DJI | ZOOM 18.5 | RETINA 4K";
+          document.getElementById('hud').innerHTML = "DRONE DJI: ORBIT GIMBAL<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + derajat + "° / 180°<br>ALT: 120m | PITCH 55° | GIMBAL STABIL | RETINA";
+          if(progress >= 1){ clearInterval(orbitTimer); }
+        }, 100);
+        // INI KUNCINE: easeTo 30 detik, easing linear, pitch dikunci 55, center dikunci!
+        map.easeTo({
+          bearing: targetBearing,
+          pitch: PITCH_DJI,
+          center: [p.lon, p.lat],
+          zoom: ZOOM_DJI,
+          duration: durasi,
+          easing: t => t,
+          essential: true
+        });
+        setTimeout(()=>{ if(orbitTimer) clearInterval(orbitTimer); document.getElementById('orbitText').innerHTML = "ORBIT DJI SELESAI - 180° GIMBAL - " + p.nama; resolve(); }, durasi + 300);
       });
     }
     async function terbangKe(p){
       if(sedangTerbang) return;
       sedangTerbang = true;
       stopOrbit = true;
+      if(orbitTimer) clearInterval(orbitTimer);
       targetAktif = p;
-      await sleep(150);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 19 | RETINA 4K";
+      document.getElementById('hud').innerHTML = "DRONE DJI: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | PITCH 55° DJI | ZOOM 18.5 | RETINA";
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
-      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 68, bearing: 0, duration: 4500, essential:true, curve: 1.2, speed: 0.45, easing: t => t});
-      await sleep(4800);
-      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta Retina 4K...";
+      // FlyTo alus DJI: 5 detik, pitch langsung 55, gak 68 maneh!
+      map.flyTo({center:[p.lon, p.lat], zoom: ZOOM_DJI, pitch: PITCH_DJI, bearing: 0, duration: 5000, essential:true, curve: 1.1, speed: 0.4, easing: t => t});
+      await sleep(5300);
+      // Tunggu peta bener-bener ke-load kabeh, baru orbit, ben gak putus-putus!
+      await new Promise(res => { map.once('idle', res); setTimeout(res, 1500); });
+      document.getElementById('hud').innerHTML = "DRONE DJI: GIMBAL STABIL...<br>Tile ke-load kabeh, siap orbit...";
       await sleep(800);
-      await orbitSmooth(p);
+      await orbitDJI(p);
       sedangTerbang = false;
     }
     async function startPatroli(){
@@ -249,15 +258,16 @@ elif mode == "drone":
       for(let i=0; i<points.length; i++){
         let p = points[i];
         targetAktif = p;
-        document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
+        document.getElementById('hud').innerHTML = "DRONE DJI: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
         document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
-        map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 68, bearing: 0, duration: 4500, essential:true, curve: 1.2, speed: 0.45, easing: t => t});
-        await sleep(4800);
+        map.flyTo({center:[p.lon, p.lat], zoom: ZOOM_DJI, pitch: PITCH_DJI, bearing: 0, duration: 5000, essential:true, curve: 1.1, speed: 0.4, easing: t => t});
+        await sleep(5300);
+        await new Promise(res => { map.once('idle', res); setTimeout(res, 1500); });
         await sleep(800);
-        await orbitSmooth(p);
+        await orbitDJI(p);
         await sleep(400);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° Smooth | Zoom 19 | Retina 4K";
+      document.getElementById('hud').innerHTML = "DRONE DJI: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° Gimbal | Pitch 55° DJI | Zoom 18.5 | Retina";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
@@ -286,7 +296,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 19 | Peta: RETINA 4K")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: 18.5 | Peta: RETINA 4K")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -294,9 +304,9 @@ else:
         from streamlit_folium import st_folium
         first = list(users.values())[0]
         tengah = [first["lat"], first["lon"]] if users else [-2.5, 118.0]
-        zoom_awal = 19 if users else 5
+        zoom_awal = 18.5 if users else 5
         if st.session_state.get("zoom_max"):
-            zoom_awal = 19
+            zoom_awal = 18.5
         m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=22, min_zoom=2, tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&scale=2", attr="Google Satellite Retina 4K", zoom_control=True)
         for n, v in users.items():
             folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
@@ -319,5 +329,5 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 19 - RETINA 4K](https://radio-kancil-fm.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 MODE DRONE DJI - PITCH 55° - ZOOM 18.5 - RETINA 4K](https://radio-kancil-fm.streamlit.app/?mode=drone)")
     st.code("Link HP: https://radio-kancil-fm.streamlit.app/?mode=user")
