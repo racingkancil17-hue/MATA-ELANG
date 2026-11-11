@@ -1,262 +1,283 @@
 import streamlit as st
-import pandas as pd
-import os
 import requests
-import urllib.parse
-import streamlit.components.v1 as components
 
-st.set_page_config(page_title="RADIO KANCIL FM - STUDIO FM", layout="wide")
-PERSONIL_FILE = "personil.csv"
+BIN_ID = "6aeeda8bac6210605a74a7b5"
+API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO"
+URL = "https://api.jsonbin.io/v3/b/" + BIN_ID
+HEADERS = {"X-Master-Key": API_KEY, "Content-Type": "application/json"}
 
-def load_personil():
-    if not os.path.exists(PERSONIL_FILE):
-        return pd.DataFrame(columns=["nama","merk"])
-    try:
-        return pd.read_csv(PERSONIL_FILE)
-    except:
-        return pd.DataFrame(columns=["nama","merk"])
-
-def get_posisi(nama):
-    kode = "radio-kancil-" + nama.lower().replace(" ", "-")
-    try:
-        r = requests.get(f"https://dweet.io/get/latest/dweet/for/{kode}", timeout=5)
-        j = r.json()
-        if j.get("this") == "succeeded":
-            return j["with"][0]["content"]
-    except:
-        pass
-    return None
-
-def kick_personil(nama_kick):
-    dfp = load_personil()
-    dfp = dfp[dfp["nama"] != nama_kick]
-    dfp.to_csv(PERSONIL_FILE, index=False)
-
+st.set_page_config(page_title="MATA ELANG", layout="wide")
 params = st.query_params
-mode = params.get("mode", "")
-nama_url = params.get("nama", "")
+mode = params.get("mode", "komando")
 
-if mode == "":
-    st.title("📻 RADIO KANCIL FM - Bandung")
-    if st.button("MASUK SEBAGAI STUDIO FM (LAPTOP)", type="primary", use_container_width=True):
-        st.query_params["mode"] = "studio"
-        st.rerun()
-    st.stop()
+def ambil():
+    try:
+        r = requests.get(URL + "/latest", headers=HEADERS, timeout=10)
+        d = r.json().get("record", {})
+        while isinstance(d, dict) and "record" in d:
+            d = d["record"]
+        if not isinstance(d, dict): d = {}
+        users = {k:v for k,v in d.items() if k != "_kicked" and isinstance(v, dict) and "lat" in v}
+        kicked = d.get("_kicked", [])
+        if not isinstance(kicked, list): kicked = []
+        return users, kicked
+    except:
+        return {}, []
 
-# === HP LAPANGAN - TETEP SAMA ===
+def simpan(users, kicked):
+    data = dict(users)
+    data["_kicked"] = kicked
+    requests.put(URL, headers=HEADERS, json=data, timeout=10)
+
 if mode == "user":
-    nama = nama_url or "HP-TANPA-NAMA"
-    merk = params.get("merk", "HP")
-    kode = "radio-kancil-" + nama.lower().replace(" ", "-")
-    st.title(f"📻 RADIO KANCIL FM - {nama}")
-    st.success(f"Halo {nama} | Merk: {merk}")
-    st.write("Biarin halaman ini nyala, GPS jalan sendiri.")
-    html = f"""
-    <div id="s" style="padding:15px;background:#e8f5e9;border-radius:10px;font-family:sans-serif;">📍 GPS: Mencari...</div>
-    <button onclick="sos()" style="width:100%; margin-top:10px; background:#FF0000; color:white; border:none; padding:18px; border-radius:15px; font-size:20px; font-weight:bold;">🆘 SOS - BUTUH BANTUAN!</button>
-    <p id="sos_status" style="font-family:sans-serif; font-weight:bold; color:red; text-align:center;"></p>
+    st.title("🦅 MATA ELANG - LIVE")
+    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: NamaMu")
+    if not nama:
+        st.warning("Isi jenengmu disik!")
+        st.stop()
+    nama = nama.strip()
+    users, kicked = ambil()
+    if nama in kicked:
+        st.error(f"⛔ {nama} DIKELUARKAN KOMANDO! Tunggu link baru!")
+        st.stop()
+    st.success(f"Halo {nama}! GPS Jalan! Ojo ditutup!")
+    html_code = f"""
+    <div id="out" style="padding:15px;background:#e8f5e9;border-radius:10px;">Mencari GPS...</div>
     <script>
-    const kode = "{kode}";
-    let lastLat=0, lastLon=0, status="AMAN";
-    function kirim(lat, lon) {{
-        lastLat=lat; lastLon=lon;
-        fetch("https://dweet.io/dweet/for/"+kode+"?lat="+lat+"&lon="+lon+"&nama="+encodeURIComponent("{nama}")+"&status="+status+"&update="+new Date().toLocaleTimeString())
-        .then(()=>{{ document.getElementById('s').innerHTML = "✅ GPS AKTIF<br>Lat: "+lat+"<br>Lon: "+lon+"<br>Status: "+status+"<br>📍 TERKIRIM KE STUDIO FM! "+new Date().toLocaleTimeString(); }});
+    const BIN_ID = "6aeeda8bac6210605a74a7b5";
+    const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
+    let myId = "{nama}";
+    function kirim(){{
+      navigator.geolocation.getCurrentPosition(pos => {{
+        document.getElementById('out').innerHTML = "GPS AKTIF - " + myId + "<br>Lat: " + pos.coords.latitude;
+        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {{headers: {{"X-Master-Key": API_KEY}}}})
+        .then(r => r.json()).then(j => {{
+          let d = j.record || {{}}; while(d.record){{ d = d.record; }}
+          let users = {{}}; let kicked = d._kicked || [];
+          for(let k in d){{ if(k != "_kicked" && d[k] && d[k].lat){{ users[k] = d[k]; }} }}
+          if(kicked.includes(myId)){{ document.getElementById('out').innerHTML = "⛔ KAMU DIKELUARKAN KOMANDO!"; return; }}
+          users[myId] = {{lat: pos.coords.latitude, lon: pos.coords.longitude, waktu: new Date().toLocaleString()}};
+          users["_kicked"] = kicked;
+          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {{method: "PUT", headers: {{"Content-Type": "application/json", "X-Master-Key": API_KEY}}, body: JSON.stringify(users)}});
+        }});
+      }});
     }}
-    function sos(){{ status="SOS-BUTUH-BANTUAN"; document.getElementById('sos_status').innerHTML="🆘 SOS TERKIRIM! STUDIO FM LAGI MLUNCUR!"; kirim(lastLat,lastLon); alert("SOS Terkirim!"); }}
-    setInterval(()=>{{ navigator.geolocation.getCurrentPosition((p)=>{{ kirim(p.coords.latitude, p.coords.longitude); }}); }}, 10000);
-    navigator.geolocation.getCurrentPosition((p)=>{{ kirim(p.coords.latitude, p.coords.longitude); }},
-    (e)=>{{ document.getElementById('s').innerHTML = "❌ GPS DITOLAK! Klik gembok, izinkan Lokasi."; }}, {{enableHighAccuracy:true}});
+    kirim(); setInterval(kirim, 5000);
     </script>
     """
-    components.html(html, height=280)
-    st.stop()
+    st.components.v1.html(html_code, height=120)
 
-# === STUDIO FM ===
-if mode == "studio":
-    st.title("🎙️ RADIO KANCIL FM - STUDIO FM LAPTOP")
+elif mode == "drone":
+    st.title("🦅 MATA ELANG - DRONE CINEMATIC 3D")
+    st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
+    st.markdown("[⬅️ Balik ke KOMANDO](https://mata-elang.streamlit.app/?mode=komando)")
+    drone_html = """
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <style>
+      #map{width:100%; height:650px; border-radius:12px;}
+      .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
+      .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
+      .zoomBtn{position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:6px;}
+      .zoomBtn button{background:#fff; border:none; width:42px; height:42px; font-size:22px; font-weight:bold; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+      .wrap{position:relative;}
+      .target{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1; font-size:36px; pointer-events:none; opacity:0.7;}
+      #listBtn{margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;}
+      .hpBtn{background:#1a1a1a; color:#00ff00; border:1px solid #00ff00; padding:10px 16px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:14px;}
+      .hpBtn:hover{background:#00ff00; color:black;}
+      .infoBox{background:#f0f0f0; padding:12px; border-radius:10px; margin-top:10px; font-family:monospace; font-size:14px; min-height:50px;}
+      .orbitBar{width:100%; height:8px; background:#ddd; border-radius:4px; margin-top:8px; overflow:hidden;}
+      .orbitFill{height:100%; width:0%; background:#00ff00; transition:width 0.3s;}
+    </style>
+    <div class="wrap">
+      <div class="hud" id="hud">DRONE: STANDBY<br>Menunggu data...</div>
+      <div class="zoomBtn">
+        <button onclick="map.zoomIn()">+</button>
+        <button onclick="map.zoomOut()">-</button>
+        <button onclick="zoomMax()" title="Zoom Maksimal">🎯</button>
+      </div>
+      <div class="target">⊕</div>
+      <div id="map"></div>
+      <button class="btn" onclick="startPatroli()">▶️ MULAI PATROLI DRONE</button>
+    </div>
+    <div id="listBtn"></div>
+    <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
+    <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 16</div>
+    <script>
+    const BIN_ID = "6aeeda8bac6210605a74a7b5";
+    const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
+          terrain: { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256 }
+        },
+        layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
+        terrain: { source: 'terrain', exaggeration: 1.2 }
+      },
+      center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
+      maxZoom: 16.5, minZoom: 2,
+      fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
+    });
+    map.addControl(new maplibregl.NavigationControl());
+    let points = [];
+    let sedangTerbang = false;
+    let stopOrbit = false;
+    let targetAktif = null;
+    function zoomMax(){
+      if(targetAktif){ map.easeTo({center:[targetAktif.lon, targetAktif.lat], zoom: 16, pitch: 65, duration: 1200}); }
+      else if(points.length>0){ map.easeTo({center:[points[0].lon, points[0].lat], zoom: 16, pitch: 65, duration: 1200}); }
+    }
+    fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
+    .then(r=>r.json()).then(j=>{
+      let data = j.record || {};
+      while(data.record){ data = data.record; }
+      let listDiv = document.getElementById('listBtn');
+      let kicked = data._kicked || [];
+      for(let k in data){
+        if(k === "_kicked") continue;
+        if(kicked.includes(k)) continue;
+        if(data[k] && data[k].lat){
+          let p = {nama:k, lat:data[k].lat, lon:data[k].lon, waktu:data[k].waktu};
+          points.push(p);
+          let marker = new maplibregl.Marker({color:'red', draggable:false}).setLngLat([p.lon, p.lat]).setPopup(new maplibregl.Popup({closeOnClick:true}).setHTML(
+  "<b>"+p.nama+"</b><br>LOKASI VALID<br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu+
+  "<br><br>"+
+  "<a href='https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lon+"' target='_blank' style='display:block;background:#1a73e8;color:#fff;text-align:center;padding:12px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:15px;margin-bottom:8px;'>🧭 RUTE KE SINI - GOOGLE MAPS</a>"+
+  "<a href='https://www.google.com/maps/search/?api=1&query="+p.lat+","+p.lon+"' target='_blank' style='display:block;background:#fff;color:#1a73e8;border:1px solid #1a73e8;text-align:center;padding:10px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:14px;'>📍 BUKA DI GOOGLE MAPS</a>"
+)).addTo(map);
+          marker.getElement().addEventListener('click', ()=>{ terbangKe(p); });
+          let b = document.createElement('button');
+          b.className = 'hpBtn';
+          b.innerText = '📍 ' + p.nama + ' - TERBANG KE SINI';
+          b.onclick = ()=>{ terbangKe(p); };
+          listDiv.appendChild(b);
+        }
+      }
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 16 MAKSIMAL";
+    });
+    function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+    async function orbit360(p){
+      stopOrbit = false;
+      let startBearing = map.getBearing();
+      let totalDerajat = 180;
+      let durasi = 15000;
+      let startTime = performance.now();
+      document.getElementById('orbitFill').style.width = "0%";
+      return new Promise((resolve)=>{
+        function frame(now){
+          if(stopOrbit){ resolve(); return; }
+          let elapsed = now - startTime;
+          let progress = Math.min(elapsed / durasi, 1);
+          let eased = progress < 0.1 ? progress * progress * 10 : progress < 0.9 ? 0.1 + (progress - 0.1) * 1.05 : 1 - Math.pow(1 - progress, 2);
+          let derajat = totalDerajat * eased;
+          let bearingBaru = startBearing + derajat;
+          map.setBearing(bearingBaru);
+          document.getElementById('orbitFill').style.width = (progress * 100) + "%";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 16 MAKSIMAL";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 16 | STABIL";
+          if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+    async function terbangKe(p){
+      if(sedangTerbang) return;
+      sedangTerbang = true;
+      stopOrbit = true;
+      targetAktif = p;
+      await sleep(200);
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 16 MAKSIMAL";
+      document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
+      // ZOOM MAKSIMAL 16, PITCH 65 - NEMPEL POL!
+      map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
+      await sleep(4300);
+      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
+      await sleep(1200);
+      await orbit360(p);
+      sedangTerbang = false;
+    }
+    async function startPatroli(){
+      if(points.length===0){ alert("Belum ada HP online!"); return; }
+      if(sedangTerbang) return;
+      sedangTerbang = true;
+      for(let i=0; i<points.length; i++){
+        let p = points[i];
+        targetAktif = p;
+        document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET "+(i+1)+"/"+points.length+": "+p.nama;
+        document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
+        map.flyTo({center:[p.lon, p.lat], zoom: 16, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
+        await sleep(4300);
+        await sleep(1200);
+        await orbit360(p);
+        await sleep(500);
+      }
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 16";
+      map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
+      sedangTerbang = false;
+    }
+    </script>
+    """
+    st.components.v1.html(drone_html, height=820)
 
-    # ===== TAMBAH PODCAST TOK - NANG KENE =====
-    st.subheader("🎙️ PODCAST KANCIL FM - Siaran Studio")
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-    st.caption("Podcast Kancil FM - Putar sambil mantau Sobat Kancil di lapangan. Ganti link audio iki karo link podcast mu dewe (Spotify / mp3 mu).")
-    st.divider()
-
-    c1, c2, c3 = st.columns(3)
+else:
+    st.title("🦅 MATA ELANG - KOMANDO")
+    users, kicked = ambil()
+    c1, c2, c3, c4 = st.columns(4)
     with c1:
-        if st.button("🔄 REFRESH MANUAL", use_container_width=True, type="primary"):
+        if st.button("🔄 REFRESH", use_container_width=True):
             st.rerun()
     with c2:
-        if st.button("🌍 BUKA GOOGLE EARTH WEB", use_container_width=True):
-            st.markdown("[Klik Disini Buka Google Earth ->](https://earth.google.com/web/)")
+        if st.button("🔍 ZOOM MAKSIMAL", use_container_width=True):
+            st.session_state["zoom_max"] = True
+            st.rerun()
     with c3:
-        if st.button("🚁 BUKA DRONE CINEMATIC 3D", use_container_width=True, type="primary"):
-            st.query_params["mode"] = "drone"
+        if st.button("🗑️ KELUARKAN SEMUA", use_container_width=True):
+            kicked_baru = list(set(kicked + list(users.keys())))
+            simpan({}, kicked_baru)
             st.rerun()
-
-    st.subheader("➕ Tambah Sobat Kancil Baru")
-    nama_baru = st.text_input("Nama Sobat Kancil, contoh: Kancil 1")
-    merk_baru = st.selectbox("Merk HP", ["OPPO","SAMSUNG","VIVO","XIAOMI","REALME","IPHONE","LAINNYA"])
-    if st.button("TAMBAH", type="primary"):
-        if nama_baru.strip() != "":
-            dfp = load_personil()
-            if nama_baru.strip() not in dfp["nama"].values:
-                dfp = pd.concat([dfp, pd.DataFrame([{"nama":nama_baru.strip(),"merk":merk_baru}])], ignore_index=True)
-                dfp.to_csv(PERSONIL_FILE, index=False)
+    with c4:
+        if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
+            simpan({}, [])
             st.rerun()
-
-    dfp = load_personil()
-    st.subheader(f"📋 Daftar Sobat Kancil ({len(dfp)} orang) - Mode Studio")
-    if not dfp.empty:
-        if st.button("🧹 KICK SEMUA SING OFFLINE", type="secondary", use_container_width=True):
-            for _, p in dfp.iterrows():
-                if not get_posisi(p["nama"]):
-                    kick_personil(p["nama"])
-            st.success("Wes tak kick kabeh sing OFFLINE!"); st.rerun()
-
-    if dfp.empty:
-        st.info("Belum ada Sobat Kancil.")
-    else:
-        try:
-            host = st.context.headers.get("host", "radio-kancil-fm.streamlit.app")
-            base = f"https://{host}"
-        except:
-            base = "https://radio-kancil-fm.streamlit.app"
-        all_pos = []
-        for _, p in dfp.iterrows():
-            data = get_posisi(p["nama"])
-            if data:
-                try:
-                    lat = float(data.get('lat')); lon = float(data.get('lon'))
-                    status = data.get('status','AMAN'); update = data.get('update','-')
-                    all_pos.append({"nama":p["nama"],"lat":lat,"lon":lon,"update":update,"status":status})
-                    if "SOS" in str(status):
-                        st.error(f"🆘 SOS!!! {p['nama']} BUTUH BANTUAN!!! | {lat}, {lon}")
-                        st.link_button(f"🚨 MELUNCUR SEKARANG KE {p['nama']}", f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}&travelmode=driving", type="primary", use_container_width=True)
-                    else:
-                        st.success(f"🟢 {p['nama']} | ONLINE | {lat}, {lon} | {update}")
-                    col1, col2, col3 = st.columns(3)
-                    with col1: st.link_button(f"🛰️ SATELIT {p['nama']}", f"https://www.google.com/maps/@?api=1&map_action=map&center={lat},{lon}&zoom=19&basemap=satellite")
-                    with col2: st.link_button(f"🌍 GOOGLE EARTH {p['nama']}", f"https://earth.google.com/web/@{lat},{lon},500a,500d,35y,0h,0t,0r")
-                    with col3: st.link_button(f"🗺️ MAPS BIASA", f"https://www.google.com/maps?q={lat},{lon}")
-                except:
-                    st.error(f"🔴 {p['nama']} | Data GPS Rusak")
-                    if st.button(f"👢 KICK {p['nama']}", key=f"kr_{p['nama']}"):
-                        kick_personil(p["nama"]); st.rerun()
-            else:
-                st.error(f"🔴 {p['nama']} - {p['merk']} | OFFLINE")
-                if st.button(f"👢 KICK / HAPUS {p['nama']}", key=f"k_{p['nama']}", type="primary"):
-                    kick_personil(p["nama"]); st.success("Wes tak kick!"); st.rerun()
-            link = f"{base}/?mode=user&nama={urllib.parse.quote(p['nama'])}&merk={urllib.parse.quote(p['merk'])}"
-            st.code(link, language="text")
-            st.caption("Copy link ini kirim ke WA Sobat Kancil.")
-            st.markdown("---")
-        if all_pos:
-            st.subheader("🛰️ PETA SATELIT - SEMUA SOBAT KANCIL")
-            st.map(pd.DataFrame(all_pos), latitude="lat", longitude="lon", size=20, color="#FF0000")
-            kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>RADIO KANCIL FM</name>'
-            for pos in all_pos:
-                kml += f"<Placemark><name>{pos['nama']}</name><description>Update: {pos['update']}</description><Point><coordinates>{pos['lon']},{pos['lat']},0</coordinates></Point></Placemark>"
-            kml += '</Document></kml>'
-            st.download_button("📥 DOWNLOAD KML BUAT GOOGLE EARTH PRO", data=kml, file_name="radio_kancil.kml", mime="application/vnd.google-earth.kml+xml", use_container_width=True)
-    st.stop()
-
-# === DRONE CINEMATIC 3D - PERSIS VIDEO MU ===
-if mode == "drone":
-    st.title("🦅 RADIO KANCIL FM - DRONE CINEMATIC 3D")
-    st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo nang ngisor peta!")
-    if st.button("⬅️ Balik ke STUDIO FM"):
-        st.query_params["mode"] = "studio"
-        st.rerun()
-    dfp = load_personil()
-    all_pos = []
-    for _, p in dfp.iterrows():
-        d = get_posisi(p["nama"])
-        if d:
-            try: all_pos.append({"nama":p["nama"],"lat":float(d.get('lat')),"lon":float(d.get('lon'))})
-            except: pass
-    if not all_pos:
-        st.warning("Durung ono sing ONLINE. Aktifke HP Sobat Kancil disik.")
-        st.stop()
-    import json as _json
-    pos_json = _json.dumps(all_pos)
-    html_drone = f"""
-    <div style="position:relative; width:100%; height:600px;">
-      <div id="map" style="width:100%; height:600px; border-radius:12px; overflow:hidden;"></div>
-      <div id="hud" style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.75); color:white; padding:10px 12px; border-radius:8px; font-family:monospace; font-size:12px; z-index:1000;">DRONE: SIAP<br>TARGET: {len(all_pos)} CHECKPOINT<br>Klik nama di bawah untuk cek lokasi</div>
-      <div style="position:absolute; top:10px; right:10px; background:white; border-radius:8px; padding:4px; z-index:1000;">
-        <button onclick="map.zoomIn()" style="display:block; width:28px; height:28px;">+</button>
-        <button onclick="map.zoomOut()" style="display:block; width:28px; height:28px;">-</button>
-      </div>
-      <div style="position:absolute; bottom:55px; left:50%; transform:translateX(-50%); z-index:1000;">
-        <button onclick="mulaiPatroli()" style="background:#FF2D55; color:white; border:none; padding:12px 28px; border-radius:25px; font-weight:bold; font-size:16px; cursor:pointer;">🎥 MULAI PATROLI DRONE</button>
-      </div>
-      <div style="position:absolute; bottom:12px; left:10px; right:10px; display:flex; gap:8px; z-index:1000; flex-wrap:wrap;">
-        {''.join([f'<button onclick="terbangKe({i})" style="background:#111; color:#00FF66; border:1px solid #00FF66; padding:8px 14px; border-radius:20px; font-weight:bold; cursor:pointer;">📍 {p["nama"]} - TERBANG KE SINI</button>' for i,p in enumerate(all_pos)])}
-      </div>
-      <div style="position:absolute; bottom:-28px; left:0; right:0; background:#f0f0f0; padding:8px; font-family:sans-serif; font-size:13px;">Total: {len(all_pos)} Online. Klik salah satu tombol ijo.</div>
-      <div id="valid" style="position:absolute; bottom:-52px; left:0; font-family:sans-serif; font-size:13px;">LOKASI VALID - {all_pos[0]["nama"]}</div>
-    </div>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-    var data = {pos_json};
-    var map = L.map('map').setView([-6.9175, 107.6191], 6);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}').addTo(map);
-    var markers = [];
-    data.forEach(function(p, i){{
-      var m = L.marker([p.lat, p.lon]).addTo(map);
-      m.bindPopup("<b>"+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon);
-      markers.push(m);
-    }});
-    var droneIcon = L.divIcon({{html:'<div style="font-size:28px;">⊕</div>', iconSize:[30,30]}});
-    var drone = L.marker([-6.9175, 107.6191], {{icon: droneIcon}}).addTo(map);
-    function setHUD(t){{ document.getElementById('hud').innerHTML = t; }}
-    function animateTo(lat, lon, zoom, done){{
-      var start = map.getCenter(); var startZoom = map.getZoom();
-      var steps = 60; var i=0;
-      var iv = setInterval(function(){{
-        i++;
-        var f = i/steps;
-        var nlat = start.lat + (lat-start.lat)*f;
-        var nlon = start.lng + (lon-start.lng)*f;
-        var nz = startZoom + (zoom-startZoom)*f;
-        map.setView([nlat, nlon], nz);
-        drone.setLatLng([nlat, nlon]);
-        if(i>=steps){{ clearInterval(iv); if(done) done(); }}
-      }}, 30);
-    }}
-    function terbangKe(i){{
-      var p = data[i];
-      document.getElementById('valid').innerHTML = "LOKASI VALID - " + p.nama;
-      setHUD("DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 500m | SPD: 60 Km/j");
-      animateTo(p.lat, p.lon, 18, function(){{
-        setHUD("DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat.toFixed(5)+"<br>Lon: "+p.lon.toFixed(5)+"<br>STATUS: STABIL...");
-        markers[i].openPopup();
-      }});
-    }}
-    var patroliIdx = 0; var patroliJalan = false;
-    function mulaiPatroli(){{
-      if(patroliJalan) return; patroliJalan = true; patroliIdx = 0;
-      setHUD("DRONE: PATROLI DIMULAI...");
-      patroliNext();
-    }}
-    function patroliNext(){{
-      if(patroliIdx >= data.length){{
-        setHUD("DRONE: PATROLI SELESAI<br>Semua "+data.length+" Checkpoint Terpantau");
-        patroliJalan = false;
-        animateTo(-6.9175, 107.6191, 6, null);
-        return;
-      }}
-      var p = data[patroliIdx];
-      setHUD("DRONE: TERBANG...<br>TARGET "+(patroliIdx+1)+"/"+data.length+": "+p.nama+"<br>ALT: 500m | SPD: 60 Km/j");
-      document.getElementById('valid').innerHTML = "LOKASI VALID - " + p.nama;
-      animateTo(p.lat, p.lon, 18, function(){{
-        setHUD("DRONE: HOVER - MEMANTAU<br>CHECKPOINT: "+p.nama+"<br>Lat: "+p.lat.toFixed(5)+"<br>Lon: "+p.lon.toFixed(5)+"<br>STATUS: STABIL...");
-        setTimeout(function(){{ patroliIdx++; patroliNext(); }}, 2500);
-      }});
-    }}
-    </script>
-    """
-    components.html(html_drone, height=680)
-    st.caption("Podcast tetep jalan nang Studio. Drone iki persis video mu: klik TERBANG KE SINI -> drone mabur, zoom mudun, hover, stabil. Klik MULAI PATROLI DRONE -> drone patroli kabeh checkpoint siji-siji sampe SELESAI.")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 16")
+    if kicked:
+        st.write("Di-kick: " + ", ".join(kicked))
+    if users:
+        import folium
+        from streamlit_folium import st_folium
+        # Nek ono user, peta langsung fokus neng user pertama, zoom 16 MAKSIMAL!
+        # Nek ora ono user, peta Indonesia zoom 5
+        first = list(users.values())[0]
+        tengah = [first["lat"], first["lon"]] if users else [-2.5, 118.0]
+        zoom_awal = 16 if users else 5
+        if st.session_state.get("zoom_max"):
+            zoom_awal = 16
+        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
+        for n, v in users.items():
+            folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
+            # Lingkaran cilik ben akurat, radius 20m tok, ora 200m
+            folium.Circle([v["lat"], v["lon"]], radius=20, color="red", fill=True, fill_opacity=0.3).add_to(m)
+            folium.CircleMarker([v["lat"], v["lon"]], radius=8, color="yellow", fill=True, fill_color="yellow").add_to(m)
+        st_folium(m, width=1000, height=600, key="peta_max")
+    st.markdown("### 📋 DAFTAR - KELUARKAN TEKO LAPTOP")
+    for n, v in users.items():
+        col1, col2, col3 = st.columns([3, 1, 1])
+        with col1:
+            st.write(f"🟢 **{n}** | {v.get('waktu','')} | {v['lat']:.6f}, {v['lon']:.6f}")
+        with col2:
+            if st.button(f"🔍 ZOOM", key=f"zoom_{n}", use_container_width=True):
+                st.session_state["zoom_max"] = True
+                st.rerun()
+        with col3:
+            if st.button(f"❌ KELUARKAN", key=f"kick_{n}", use_container_width=True):
+                users_baru = {k:val for k,val in users.items() if k != n}
+                kicked_baru = kicked + [n] if n not in kicked else kicked
+                simpan(users_baru, kicked_baru)
+                st.rerun()
+    st.markdown("---")
+    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16](https://mata-elang.streamlit.app/?mode=drone)")
+    st.code("Link HP: https://mata-elang.streamlit.app/?mode=user")
