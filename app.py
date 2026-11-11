@@ -29,9 +29,8 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
-# ===== MODE USER = PODCAST SEK, 18 DETIK, TRUS GPS AKTIF =====
+# ===== USER HP - PODCAST KHUSUS NOK KENE TOK =====
 if mode == "user":
-    # 1. PODCAST MUNCUL SEK - PERSIS NETLIFY WINGI
     st.markdown("""
     <style>
     .podcast-wrap{background:#000000; padding:20px 16px 20px 16px; border-radius:20px; text-align:center;}
@@ -42,14 +41,10 @@ if mode == "user":
     """, unsafe_allow_html=True)
     st.markdown('<div class="podcast-wrap"><span class="live-badge">● ON AIR - RADIO KANCIL FM</span><div class="podcast-title">🎙️ Podcast Coffe Morning</div><div class="podcast-sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div></div>', unsafe_allow_html=True)
     st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
-
-    # 2. LAGU BUNYI - GANTI LINK MP3 MU NANG KENE
-    # Lagu iki sing muni 18 detik pertama
+    # GANTI LINK MP3 MU SING 18 DETIK NANG KENE
     audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
     st.audio(audio_url, format="audio/mp3", autoplay=True)
     st.info("🎵 Lagu Coffe Morning lagi muni... Diemin 18 detik, habis iku GPS langsung aktif dewe!")
-
-    # 3. ISI JENENG - TRUS GPS OTOMATIS JALAN HABIS 18 DETIK
     nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: joni")
     if not nama:
         st.warning("Isi jenengmu disik! Lagu tetep muni sambil nunggu.")
@@ -60,8 +55,6 @@ if mode == "user":
         st.error(f"⛔ {nama} DIKELUARKAN STUDIO FM! Tunggu link baru!")
         st.stop()
     st.success(f"Halo {nama}! Siap-siap, GPS aktif habis lagu 18 detik!")
-
-    # GPS + TIMER 18 DETIK - IKI KUNCINE!
     html_code = f"""
     <div id="out" style="padding:15px;background:#000;color:#00ff00;border-radius:10px;font-family:monospace;text-align:center;font-size:16px;">🎵 PODCAST MUNI...<br><span id="cd" style="font-size:28px;">18</span><br>detik lagi GPS AKTIF...</div>
     <script>
@@ -99,17 +92,7 @@ if mode == "user":
     """
     st.components.v1.html(html_code, height=140)
 
-# ===== MODE PODCAST DEWE - BEN ISO DIBUKA LANGSUNG YO ISO =====
-elif mode == "podcast":
-    st.title("🎙️ Podcast Coffe Morning")
-    st.write("Sukses Berwira Usaha - Dengerin Sebentar Yuk")
-    st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", format="audio/mp3")
-    if st.button("▶️ PUTAR LAGU", type="primary", use_container_width=True):
-        st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", format="audio/mp3", autoplay=True)
-    st.markdown("[⬅️ Balik ke STUDIO FM](https://radio-kancil-fm.streamlit.app/?mode=komando)")
-
-# ===== MODE DRONE - 4K =====
+# ===== DRONE - PETA 4K =====
 elif mode == "drone":
     st.title("📻 RADIO KANCIL FM - DRONE CINEMATIC 3D")
     st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
@@ -266,7 +249,7 @@ elif mode == "drone":
     """
     st.components.v1.html(drone_html, height=820)
 
-# ===== STUDIO FM =====
+# ===== LAPTOP - NORMAL PERSIS WINGI, GAK ONO PODCAST! =====
 else:
     st.title("📻 RADIO KANCIL FM - STUDIO FM")
     users, kicked = ambil()
@@ -321,6 +304,4 @@ else:
                 st.rerun()
     st.markdown("---")
     st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16 - PETA 4K](https://radio-kancil-fm.streamlit.app/?mode=drone)")
-    st.markdown("[🎙️ MODE PODCAST COFFE MORNING - RADIO KANCIL FM](https://radio-kancil-fm.streamlit.app/?mode=podcast)")
     st.code("Link HP: https://radio-kancil-fm.streamlit.app/?mode=user")
-    st.code("Link Podcast: https://radio-kancil-fm.streamlit.app/?mode=podcast")
