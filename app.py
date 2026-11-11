@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime
 
-# --- SETTING RADIO ---
 st.set_page_config(page_title="RADIO KANCIL FM", page_icon="📻", layout="centered")
 FILE = "requests.json"
 
@@ -20,11 +19,10 @@ def save_data(data):
     with open(FILE, "w") as f:
         json.dump(data, f)
 
-# --- AMBIL MODE DARI LINK ---
 params = st.query_params
 mode = params.get("mode", "user")
 
-# --- STYLE RADIO - WES DIBENERKE, GAK NGELACK MANEH ---
+# --- STYLE WES DIBENERKE TOTAL ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {background-color: #0f0f0f;}
@@ -32,21 +30,18 @@ st.markdown("""
 h1, h2, h3, p, label, span {color: white !important;}
 .stTextInput input, .stTextArea textarea {background-color: white !important; color: black !important;}
 div[data-baseweb="input"] input {color: black !important;}
+/* IKI SING MARAI TULISAN KOTAK DADI KETOK - DIPAKSA IRENG */
+[data-testid="stAlert"] * {color: black !important;}
+[data-testid="stAlert"] {background-color: #FFF3CD !important;}
 .stButton>button {background-color: #FF2D55; color: white; border-radius: 20px; width: 100%; font-weight: bold;}
 </style>
 """, unsafe_allow_html=True)
 
-# ================= STUDIO FM =================
+# ================= STUDIO FM - TANPA SANDI =================
 if mode == "studio":
     st.title("🎙️ STUDIO FM - RADIO KANCIL FM")
     st.write("Halo DJ KANCIL! Selamat siaran!")
-    
-    pw = st.text_input("Password Studio:", type="password")
-    if pw != "kancil123":
-        st.warning("Masukkan password studio untuk lihat request.")
-        st.stop()
-    
-    st.success("LIVE ON AIR 🔴 - Kamu sedang siaran!")
+    st.write("🔴 LIVE ON AIR - Kamu sedang siaran!")
     st.divider()
     
     data = load_data()
@@ -65,12 +60,12 @@ if mode == "studio":
         save_data([])
         st.rerun()
 
-# ================= SOBAT KANCIL / PENDENGAR =================
+# ================= SOBAT KANCIL =================
 else:
     st.title("📻 RADIO KANCIL FM")
     st.subheader("Bareng DJ KANCIL - Live dari STUDIO FM")
     st.write("Halo SOBAT KANCIL! Lagi dengerin radio paling gaul se-Bandung! 🔥")
-    st.markdown("🔴 **ON AIR SEKARANG** | Request lagu mu bakal dibacakke DJ langsung!")
+    st.write("🔴 ON AIR SEKARANG | Request lagu mu bakal dibacakke DJ langsung!")
     st.divider()
 
     st.subheader("📩 Request Lagu & Titip Salam")
@@ -88,7 +83,7 @@ else:
                 "jam": datetime.now().strftime("%H:%M - %d/%m")
             })
             save_data(data)
-            st.success(f"JOS! Request mu wes mlebu Studio, {nama}! Ditunggu dibacakke DJ KANCIL ya!")
+            st.success(f"JOS! Request mu wes mlebu Studio, {nama}!")
             st.balloons()
         else:
             st.error("Isi Nama Gaul karo Lagu ne disik, Sob!")
