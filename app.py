@@ -1,82 +1,95 @@
 import streamlit as st
-import requests
-import time
+import json
+import os
+from datetime import datetime
 
-BIN_ID = "6aeeda8bac6210605a74a7b5"
-API_KEY = "$2a$10$LqOM0CuXj0rfzswJ3uFRreGYD5d1L2gTC0LRvTA700G96mUzr7.aO"
-URL = "https://api.jsonbin.io/v3/b/" + BIN_ID
-HEADERS = {"X-Master-Key": API_KEY, "Content-Type": "application/json"}
+# --- SETTING RADIO ---
+st.set_page_config(page_title="RADIO KANCIL FM", page_icon="📻", layout="centered")
+FILE = "requests.json"
 
-# DEFAULT MODE = USER (SAMARAN) - ben wong njobo langsung ketok Radio
+def load_data():
+    if os.path.exists(FILE):
+        try:
+            with open(FILE, "r") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_data(data):
+    with open(FILE, "w") as f:
+        json.dump(data, f)
+
+# --- AMBIL MODE DARI LINK ---
 params = st.query_params
 mode = params.get("mode", "user")
 
-def ambil():
-    try:
-        r = requests.get(URL + "/latest", headers=HEADERS, timeout=10)
-        d = r.json().get("record", {})
-        while isinstance(d, dict) and "record" in d:
-            d = d["record"]
-        if not isinstance(d, dict): d = {}
-        return d
-    except: return {}
+# --- STYLE RADIO ---
+st.markdown("""
+<style>
+.main {background-color: #0f0f0f;}
+h1, h2, h3, p, label {color: white !important;}
+.stButton>button {background-color: #FF2D55; color: white; border-radius: 20px; width: 100%; font-weight: bold;}
+</style>
+""", unsafe_allow_html=True)
 
-def simpan(data):
-    requests.put(URL, json=data, headers=HEADERS, timeout=10)
-
-# ============ MODE KOMANDO ============
-if mode == "komando":
-    st.set_page_config(page_title="KOMANDO - MATA ELANG", layout="wide")
-    st.title("🦅 KOMANDO - MATA ELANG")
-    pw = st.text_input("SANDI KOMANDO:", type="password")
+# ================= STUDIO FM =================
+if mode == "studio":
+    st.title("🎙️ STUDIO FM - RADIO KANCIL FM")
+    st.write("Halo DJ KANCIL! Selamat siaran!")
+    
+    # Password sederhana ben gak sembarang wong mlebu studio
+    pw = st.text_input("Password Studio:", type="password")
     if pw != "kancil123":
-        st.warning("Masukkan sandi komando")
+        st.warning("Masukkan password studio untuk lihat request.")
         st.stop()
-    st.success("AKSES DITERIMA - SELAMAT DATANG KOMANDAN")
-    data = ambil()
-    st.write(f"Total Personil Terpantau: {len(data)}")
-    for nama, info in data.items():
-        st.write(f"📍 **{nama}** - {info.get('lat')}, {info.get('lon')} - {info.get('waktu','')}")
-        if info.get('lat'):
-            st.map(data={"lat":[info['lat']], "lon":[info['lon']]})
-    if st.button("🔄 REFRESH PETA"):
+    
+    st.success("LIVE ON AIR 🔴 - Kamu sedang siaran!")
+    st.divider()
+    
+    data = load_data()
+    st.subheader(f"📩 Request & Titip Salam Masuk: {len(data)}")
+    
+    if not data:
+        st.info("Durung ono request mlebu, DJ. Enteni Sobat Kancil request.")
+    else:
+        for i, d in enumerate(reversed(data)):
+            with st.container(border=True):
+                st.write(f"**🎧 {d['nama']}** - {d['jam']}")
+                st.write(f"🎵 Request Lagu: **{d['lagu']}**")
+                st.write(f"💌 Titip Salam: {d['salam']}")
+    
+    if st.button("Hapus Semua Request"):
+        save_data([])
         st.rerun()
-    st.stop()
 
-# ============ MODE USER - SAMARAN RADIO ============
-st.set_page_config(page_title="RADIO KANCIL FM - PODCAST MUSIK", layout="wide")
-st.markdown("<h1 style='text-align:center'>📻 RADIO KANCIL FM</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center'>🎙️ Podcast Musik Dangdut Viral - Request Lagu Gratis!</p>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center'>🔴 LIVE - 1.2K Pendengar</p>", unsafe_allow_html=True)
-
-nama = st.text_input("👤 JENENGMU GAWE REQUEST LAGU:", placeholder="Contoh: Budi - Request Via Vallen")
-st.info("📌 Tim: Isi Nama / Kode Callsign sing wes disepakati, terus klik PUTAR. Musik 18 detik = sinyal absen terkirim.")
-
-if nama:
-    if st.button("🎵 PUTAR MUSIK & REQUEST LAGU", use_container_width=True):
-        st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-        st.success("🎶 Lagu diputar... Request mu masuk antrian!")
-        # Kirim lokasi via JS
-        js = f"""
-        <script>
-        navigator.geolocation.getCurrentPosition(function(pos){{
-            fetch("https://api.jsonbin.io/v3/b/{BIN_ID}", {{
-                method: "GET",
-                headers: {{"X-Master-Key": "{API_KEY}"}}
-            }}).then(r=>r.json()).then(j=>{{
-                let d = j.record || {{}};
-                if(d.record) d = d.record;
-                d["{nama}"] = {{lat: pos.coords.latitude, lon: pos.coords.longitude, waktu: new Date().toLocaleString('id-ID')}};
-                fetch("https://api.jsonbin.io/v3/b/{BIN_ID}", {{
-                    method: "PUT",
-                    headers: {{"X-Master-Key": "{API_KEY}", "Content-Type": "application/json"}},
-                    body: JSON.stringify(d)
-                }});
-            }});
-        }});
-        </script>
-        """
-        st.components.v1.html(js, height=0)
-        st.balloons()
+# ================= SOBAT KANCIL / PENDENGAR =================
 else:
-    st.warning("Isi jenengmu disik bro gawe request lagu.")
+    st.title("📻 RADIO KANCIL FM")
+    st.subheader("Bareng DJ KANCIL - Live dari STUDIO FM")
+    st.write("Halo **SOBAT KANCIL**! Lagi dengerin radio paling gaul se-Bandung! 🔥")
+    st.markdown("🔴 **ON AIR SEKARANG** | Request lagu mu bakal dibacakke DJ langsung!")
+    st.divider()
+
+    st.subheader("📩 Request Lagu & Titip Salam")
+    nama = st.text_input("Nama Gaul / Nama Panggilan Mu:")
+    lagu = st.text_input("Request Lagu Opo, Sob?")
+    salam = st.text_area("Titip Salam Gawe Sopo?")
+
+    if st.button("KIRIM REQUEST KE STUDIO 🚀"):
+        if nama and lagu:
+            data = load_data()
+            data.append({
+                "nama": nama,
+                "lagu": lagu,
+                "salam": salam if salam else "-",
+                "jam": datetime.now().strftime("%H:%M - %d/%m")
+            })
+            save_data(data)
+            st.success(f"JOS! Request mu wes mlebu Studio, {nama}! Ditunggu dibacakke DJ KANCIL ya!")
+            st.balloons()
+        else:
+            st.error("Isi Nama Gaul karo Lagu ne disik, Sob!")
+
+    st.divider()
+    st.caption("RADIO KANCIL FM - Radio ne Sobat Kancil | Bandung")
