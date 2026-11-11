@@ -29,6 +29,7 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
+# ===== MODE USER HP =====
 if mode == "user":
     st.title("📻 RADIO KANCIL FM - LIVE")
     nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: NamaMu")
@@ -67,6 +68,41 @@ if mode == "user":
     """
     st.components.v1.html(html_code, height=120)
 
+# ===== MODE PODCAST - RADIO FM - BARU =====
+elif mode == "podcast":
+    st.markdown("""
+    <style>
+    .podcast-wrap{background:#000000; padding:20px 16px 30px 16px; border-radius:20px; text-align:center;}
+    .podcast-title{color:white; font-size:36px; font-weight:800; line-height:1.1; margin:10px 0 8px 0;}
+    .podcast-sub{color:#b3b3b3; font-size:16px; margin-bottom:18px;}
+    .podcast-img{width:100%; border-radius:20px; border:2px solid #222;}
+    .live-badge{display:inline-block; background:#ff0000; color:white; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold; letter-spacing:1px;}
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="podcast-wrap"><span class="live-badge">● ON AIR - RADIO KANCIL FM</span><div class="podcast-title">🎙️ Podcast Coffe Morning</div><div class="podcast-sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div></div>', unsafe_allow_html=True)
+    st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
+    st.markdown("### 📻 Radio Kancil FM - Bandung")
+    st.write("Coffe Morning - Ngopi santai sambil dengerin cerita sukses wirausaha Bandung. Putar neng ngisor iki!")
+    # GANTI LINK MP3 MU NANG KENE
+    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    st.audio(audio_url, format="audio/mp3")
+    if st.button("▶️ PUTAR LAGU", type="primary", use_container_width=True):
+        st.audio(audio_url, format="audio/mp3", autoplay=True)
+        st.success("🎵 Lagi Muter... Coffe Morning - Radio Kancil FM!")
+    st.markdown("---")
+    st.markdown("**Episode Liyane:**")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("🎧 Episode 1 - Ngopi & Sukses", use_container_width=True):
+            st.audio(audio_url, format="audio/mp3", autoplay=True)
+    with c2:
+        if st.button("🎧 Episode 2 - Berwira Usaha", use_container_width=True):
+            st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", format="audio/mp3", autoplay=True)
+    st.markdown("---")
+    st.markdown("[⬅️ Balik ke STUDIO FM](https://radio-kancil-fm.streamlit.app/?mode=komando)")
+    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16](https://radio-kancil-fm.streamlit.app/?mode=drone)")
+
+# ===== MODE DRONE - 4K TAJEM =====
 elif mode == "drone":
     st.title("📻 RADIO KANCIL FM - DRONE CINEMATIC 3D")
     st.write("Diemin 10 detik biar peta ke-load, baru klik tombol ijo jeneng nang ngisor peta!")
@@ -75,7 +111,8 @@ elif mode == "drone":
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <style>
-      #map{width:100%; height:650px; border-radius:12px;}
+      #map{width:100%; height:650px; border-radius:12px; image-rendering:-webkit-optimize-contrast;}
+      #map canvas{ filter: contrast(1.15) saturate(1.25) brightness(1.05); }
       .hud{position:absolute; top:12px; left:12px; z-index:10; background:rgba(0,0,0,0.65); color:white; padding:10px 14px; border-radius:10px; font-family:monospace; font-size:14px; border:1px solid rgba(255,255,255,0.3);}
       .btn{position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10; background:#ff0000; color:white; border:none; padding:14px 28px; font-size:18px; font-weight:bold; border-radius:30px; cursor:pointer;}
       .zoomBtn{position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:6px;}
@@ -103,7 +140,7 @@ elif mode == "drone":
     <div id="listBtn"></div>
     <div class="infoBox" id="infoBox">Klik tombol ijo jeneng nang nduwur gawe ndelok lokasi valid-e.</div>
     <div class="orbitBar"><div class="orbitFill" id="orbitFill"></div></div>
-    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 16</div>
+    <div id="orbitText" style="font-family:monospace; font-size:13px; margin-top:4px;">ORBIT: 0% - 0° / 180° | ZOOM: MAKSIMAL 16 | PETA: 4K HD</div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
@@ -112,15 +149,15 @@ elif mode == "drone":
       style: {
         version: 8,
         sources: {
-          sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
+          sat: { type: 'raster', tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 512 },
           terrain: { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256 }
         },
         layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
-        terrain: { source: 'terrain', exaggeration: 1.2 }
+        terrain: { source: 'terrain', exaggeration: 1.0 }
       },
       center: [118.0, -2.5], zoom: 4, pitch: 0, bearing: 0,
-      maxZoom: 16.5, minZoom: 2,
-      fadeDuration: 500, maxTileCacheSize: 500, renderWorldCopies: false
+      maxZoom: 20, minZoom: 2,
+      fadeDuration: 0, maxTileCacheSize: 1000, renderWorldCopies: false, pixelRatio: 2
     });
     map.addControl(new maplibregl.NavigationControl());
     let points = [];
@@ -157,7 +194,7 @@ elif mode == "drone":
           listDiv.appendChild(b);
         }
       }
-      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 16 MAKSIMAL";
+      document.getElementById('hud').innerHTML = "DRONE: SIAP<br>TARGET: "+points.length+" CHECKPOINT<br>ORBIT: 180° / 15 DETIK | ZOOM: 16 MAKSIMAL | PETA 4K HD";
     });
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
     async function orbit360(p){
@@ -177,8 +214,8 @@ elif mode == "drone":
           let bearingBaru = startBearing + derajat;
           map.setBearing(bearingBaru);
           document.getElementById('orbitFill').style.width = (progress * 100) + "%";
-          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 16 MAKSIMAL";
-          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 16 | STABIL";
+          document.getElementById('orbitText').innerHTML = "ORBIT: " + Math.floor(progress*100) + "% - " + Math.floor(derajat) + "° / 180° - " + p.nama + " | ZOOM: 16 MAKSIMAL | 4K HD";
+          document.getElementById('hud').innerHTML = "DRONE: ORBIT - MEMANTAU<br>CHECKPOINT: " + p.nama + "<br>PUTARAN: " + Math.floor(derajat) + "° / 180°<br>ALT: 120m | ZOOM 16 | STABIL | 4K";
           if(progress < 1){ requestAnimationFrame(frame); } else { document.getElementById('orbitText').innerHTML = "ORBIT SELESAI - 180° - " + p.nama; resolve(); }
         }
         requestAnimationFrame(frame);
@@ -190,11 +227,11 @@ elif mode == "drone":
       stopOrbit = true;
       targetAktif = p;
       await sleep(200);
-      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 16 MAKSIMAL";
+      document.getElementById('hud').innerHTML = "DRONE: TERBANG...<br>TARGET: "+p.nama+"<br>ALT: 120m | ZOOM 16 MAKSIMAL | 4K";
       document.getElementById('infoBox').innerHTML = "<b>LOKASI VALID - "+p.nama+"</b><br>Lat: "+p.lat+"<br>Lon: "+p.lon+"<br>Waktu: "+p.waktu;
       map.flyTo({center:[p.lon, p.lat], zoom: 19, pitch: 65, bearing: 0, duration: 4000, essential:true, curve: 1.05, speed: 0.5});
       await sleep(4300);
-      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit...";
+      document.getElementById('hud').innerHTML = "DRONE: STABILISASI...<br>Loading peta satelit 4K...";
       await sleep(1200);
       await orbit360(p);
       sedangTerbang = false;
@@ -214,7 +251,7 @@ elif mode == "drone":
         await orbit360(p);
         await sleep(500);
       }
-      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 16";
+      document.getElementById('hud').innerHTML = "DRONE: PATROLI SELESAI<br>Semua "+points.length+" Checkpoint Terpantau - Orbit 180° | Zoom 16 | 4K";
       map.flyTo({center:[118.0, -2.5], zoom: 4, pitch: 0, bearing: 0, duration: 3000});
       sedangTerbang = false;
     }
@@ -222,6 +259,7 @@ elif mode == "drone":
     """
     st.components.v1.html(drone_html, height=820)
 
+# ===== STUDIO FM =====
 else:
     st.title("📻 RADIO KANCIL FM - STUDIO FM")
     users, kicked = ambil()
@@ -242,7 +280,7 @@ else:
         if st.button("🔗 BUAT LINK BARU (RESET)", use_container_width=True):
             simpan({}, [])
             st.rerun()
-    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 16")
+    st.info(f"Online: {len(users)} | Di-kick: {len(kicked)} | Zoom: MAKSIMAL 16 | Peta: 4K HD")
     if kicked:
         st.write("Di-kick: " + ", ".join(kicked))
     if users:
@@ -253,7 +291,8 @@ else:
         zoom_awal = 16 if users else 5
         if st.session_state.get("zoom_max"):
             zoom_awal = 16
-        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="Esri.WorldImagery", zoom_control=True)
+        # PETA 4K - Google Satellite HD, tile 512
+        m = folium.Map(location=tengah, zoom_start=zoom_awal, max_zoom=20, min_zoom=2, tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", attr="Google Satellite 4K", zoom_control=True)
         for n, v in users.items():
             folium.Marker([v["lat"], v["lon"]], popup=f"<b>{n}</b><br>{v.get('waktu','')}<br>Lat: {v['lat']}<br>Lon: {v['lon']}", tooltip=n, icon=folium.Icon(color="red", icon="eye-open")).add_to(m)
             folium.Circle([v["lat"], v["lon"]], radius=20, color="red", fill=True, fill_opacity=0.3).add_to(m)
@@ -275,5 +314,7 @@ else:
                 simpan(users_baru, kicked_baru)
                 st.rerun()
     st.markdown("---")
-    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16](https://radio-kancil-fm.streamlit.app/?mode=drone)")
+    st.markdown("[🚁 MODE DRONE CINEMATIC 3D - ZOOM 16 - PETA 4K](https://radio-kancil-fm.streamlit.app/?mode=drone)")
+    st.markdown("[🎙️ MODE PODCAST COFFE MORNING - RADIO KANCIL FM](https://radio-kancil-fm.streamlit.app/?mode=podcast)")
     st.code("Link HP: https://radio-kancil-fm.streamlit.app/?mode=user")
+    st.code("Link Podcast: https://radio-kancil-fm.streamlit.app/?mode=podcast")
