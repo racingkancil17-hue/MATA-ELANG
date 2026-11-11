@@ -24,11 +24,14 @@ def save_data(data):
 params = st.query_params
 mode = params.get("mode", "user")
 
-# --- STYLE RADIO ---
+# --- STYLE RADIO - WES DIBENERKE, GAK NGELACK MANEH ---
 st.markdown("""
 <style>
-.main {background-color: #0f0f0f;}
-h1, h2, h3, p, label {color: white !important;}
+[data-testid="stAppViewContainer"] {background-color: #0f0f0f;}
+[data-testid="stHeader"] {background-color: #0f0f0f;}
+h1, h2, h3, p, label, span {color: white !important;}
+.stTextInput input, .stTextArea textarea {background-color: white !important; color: black !important;}
+div[data-baseweb="input"] input {color: black !important;}
 .stButton>button {background-color: #FF2D55; color: white; border-radius: 20px; width: 100%; font-weight: bold;}
 </style>
 """, unsafe_allow_html=True)
@@ -38,7 +41,6 @@ if mode == "studio":
     st.title("🎙️ STUDIO FM - RADIO KANCIL FM")
     st.write("Halo DJ KANCIL! Selamat siaran!")
     
-    # Password sederhana ben gak sembarang wong mlebu studio
     pw = st.text_input("Password Studio:", type="password")
     if pw != "kancil123":
         st.warning("Masukkan password studio untuk lihat request.")
@@ -67,7 +69,7 @@ if mode == "studio":
 else:
     st.title("📻 RADIO KANCIL FM")
     st.subheader("Bareng DJ KANCIL - Live dari STUDIO FM")
-    st.write("Halo **SOBAT KANCIL**! Lagi dengerin radio paling gaul se-Bandung! 🔥")
+    st.write("Halo SOBAT KANCIL! Lagi dengerin radio paling gaul se-Bandung! 🔥")
     st.markdown("🔴 **ON AIR SEKARANG** | Request lagu mu bakal dibacakke DJ langsung!")
     st.divider()
 
